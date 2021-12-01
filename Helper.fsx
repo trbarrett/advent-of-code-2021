@@ -13,7 +13,7 @@ let startStopwatch () = System.Diagnostics.Stopwatch.StartNew ()
 let measurePart partN f =
     let sw = startStopwatch ()
     let result = f ()
-    printfn $"\nPart {partN} result: {result} took: {sw.ElapsedMilliseconds}ms"
+    printfn $"Part {partN} result: {result} took: {sw.ElapsedMilliseconds}ms"
 
 let measurePart1 f = measurePart 1 f
 let measurePart2 f = measurePart 2 f
