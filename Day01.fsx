@@ -1,6 +1,6 @@
 #load "./Helper.fsx"
 
-// Day 1 - Simple windowing functions
+// Day 1 - Depth increasing: Simple windowing functions
 //
 // Part 1 - Check if the difference between numbers is increasing
 // Part 2 - Check if the difference between groups of numbers is increasing
