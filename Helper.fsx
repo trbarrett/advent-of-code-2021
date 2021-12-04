@@ -105,6 +105,14 @@ module Math =
         |> Seq.mapi (fun i x -> (int64 (pown 10 i)) * x )
         |> Seq.sum
 
+    /// Takes a seq of 1 or 0 digits and converts them into a single number
+    /// based on position. e.g. [ 1; 0; 1; 1; 0 ] -> 22
+    let binaryDigitsToInt32 digits =
+        digits
+        |> Seq.rev
+        |> Seq.mapi (fun i x -> (int32 (pown 2 i)) * x )
+        |> Seq.sum
+
 
 let memoize f =
     let dict = Dictionary<_,_>()
