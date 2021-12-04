@@ -28,17 +28,17 @@ module SubVec =
        | Down n -> (x, depth, aim + n)
        | Up n -> (x, depth, aim - n)
 
+let part1 directions =
+    ((0,0), directions) ||> List.fold SubVec.addPart1 |> fun (x,y) -> x * y
+    // Correct Answer: 2039256, took: 0ms
+
+let part2 directions =
+    ((0,0,0), directions) ||> List.fold SubVec.addPart2 |> fun (x,y, _) -> x * y
+    // Correct Answer: 1856459736, took: 0ms
+
 let directions =
     readLinesWithHashComments "day02.txt"
     |> List.ofSeq |> List.map SubVec.parse
 
-let part1 () =
-    ((0,0), directions) ||> List.fold SubVec.addPart1 |> fun (x,y) -> x * y
-    // Correct Answer: 2039256, took: 0ms
-
-let part2 () =
-    ((0,0,0), directions) ||> List.fold SubVec.addPart2 |> fun (x,y, _) -> x * y
-    // Correct Answer: 1856459736, took: 0ms
-
-Helper.measurePart1 part1
-Helper.measurePart2 part2
+Helper.measurePart1 part1 directions
+Helper.measurePart2 part2 directions

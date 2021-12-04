@@ -10,13 +10,13 @@ let tee f x = f x; x
 
 let startStopwatch () = System.Diagnostics.Stopwatch.StartNew ()
 
-let measurePart partN f =
+let measurePart partN f input =
     let sw = startStopwatch ()
-    let result = f ()
+    let result = f input
     printfn $"Part {partN} result: {result} took: {sw.ElapsedMilliseconds}ms"
 
-let measurePart1 f = measurePart 1 f
-let measurePart2 f = measurePart 2 f
+let measurePart1 f input = measurePart 1 f input
+let measurePart2 f input = measurePart 2 f input
 
 let public readLinesWithHashComments inputName =
     sprintf "%s/inputdata/%s" __SOURCE_DIRECTORY__ inputName

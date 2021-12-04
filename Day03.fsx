@@ -5,16 +5,12 @@ open Helper
 // Day 2 - Binary Diagnostic: Simple list counting
 //
 // Part 1 - Count the number of ones in each column
-// Part 2 - Same as part 1, but with a filtering step
+// Part 2 - Similar to part 1, but with a filtering step
 //
 // Remarks: There's probably fancier and faster ways of doing this with bit
 //          fiddling, but this
 
-let binaryNumbers =
-    readLinesWithHashComments "day03.txt"
-    |> List.ofSeq |> List.map (Seq.map Char.digitToInt >> List.ofSeq)
-
-let part1 () =
+let part1 binaryNumbers =
     // count up the `1`s in each column
     let onesCounts =
         binaryNumbers
@@ -23,7 +19,7 @@ let part1 () =
     let gamma =
         onesCounts
         // set a 1 or 0 depending on what's the most common in each column
-        |> List.map (fun x -> if x > (List.length binaryNumbers / 2) then 1 else 0)
+        |> List.map (fun x -> if x * 2 > List.length binaryNumbers then 1 else 0)
         // and convert the resulting binary representation to an int32
         |> Math.binaryDigitsToInt32
 
@@ -44,7 +40,7 @@ let rec whittleDownBinaries determineWhitter binaryNumbers column =
         let remaining = xs |> List.filter (fun x -> List.item column x = whittleItem)
         whittleDownBinaries determineWhitter remaining (column + 1)
 
-let part2 () =
+let part2 binaryNumbers =
     let matchMostCommon onesCount len = if onesCount * 2 >= len then 1 else 0
     let matchLeastCommon onesCount len = if onesCount * 2 >= len then 0 else 1
 
@@ -55,5 +51,9 @@ let part2 () =
     * (Math.binaryDigitsToInt32 co2ScrubberRating)
     // Correct Answer: 1877139 took: 1ms
 
-Helper.measurePart1 part1
-Helper.measurePart2 part2
+let binaryNumbers =
+    readLinesWithHashComments "day03.txt"
+    |> List.ofSeq |> List.map (Seq.map Char.digitToInt >> List.ofSeq)
+
+Helper.measurePart1 part1 binaryNumbers
+Helper.measurePart2 part2 binaryNumbers
