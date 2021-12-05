@@ -11,3 +11,4 @@
 00010
 01010
 # part 1 - gamma rate is 10110, epsilon is therefore 01001. Multiplying gives us 198
+# part 2 - oxygenGeneratorRating is 23, co2ScrubberRating is 10. Multiplying gives us 230

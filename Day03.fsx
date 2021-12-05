@@ -2,10 +2,11 @@
 
 open Helper
 
-// Day 2 - Binary Diagnostic: Simple list counting
+// Day 3 - Binary Diagnostic: Simple nested list counting and filtering
 //
 // Part 1 - Count the number of ones in each column
-// Part 2 - Similar to part 1, but with a filtering step
+// Part 2 - Count the number of ones in each column, but with a filtering step
+//          after each column
 //
 // Remarks: There's probably fancier and faster ways of doing this with bit
 //          fiddling, but this

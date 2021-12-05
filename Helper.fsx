@@ -1,5 +1,6 @@
 #I __SOURCE_DIRECTORY__
 
+open System.Text.RegularExpressions
 open System.IO
 open System.Collections.Generic
 
@@ -90,8 +91,11 @@ module String =
     let splitStr (delimiter : string) (input : string) =
         input.Split delimiter
 
-    let trim (input : string) =
-        input.Trim()
+    let trim (input : string) = input.Trim()
+
+    let splitIntoMatching regexPattern (input : string) =
+        Regex.Matches(input, regexPattern)
+        |> Seq.map (fun x -> x.Value)
 
 module Char =
     let digitToInt (c : char) = int c - int '0'
