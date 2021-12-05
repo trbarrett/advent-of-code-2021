@@ -96,6 +96,7 @@ module String =
     let splitIntoMatching regexPattern (input : string) =
         Regex.Matches(input, regexPattern)
         |> Seq.map (fun x -> x.Value)
+        |> List.ofSeq
 
 module Char =
     let digitToInt (c : char) = int c - int '0'
