@@ -12,6 +12,8 @@
         <None Include="Day03.fsx" />
         <None Include="Day04.fsx" />
         <None Include="Day05.fsx" />
+        <None Include="Day06Immutable.fsx" />
+        <None Include="Day06Mutable.fsx" />
     </ItemGroup>
 
 </Project>

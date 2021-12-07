@@ -50,6 +50,9 @@ module Map =
         let flatten = (fun (KeyValue(x, ys)) -> ys |> Seq.map (mkTuple x))
         Seq.collect flatten m
 
+    let mapValues f m =
+       m |> Map.map (fun _ v -> f v)
+
 module List =
     let permutationsWithReplacement (values : 'a list) times =
         let splitValues = values |> List.map List.singleton
@@ -72,6 +75,13 @@ module List =
         | _, [] -> []
         | k, (x::xs) ->
             List.map ((@) [x]) (combinations (k-1) xs) @ combinations k xs
+
+    let replaceAt replaceAt replacement xs =
+        xs
+        |> List.mapi (fun i x ->
+            if i = replaceAt then replacement
+            else x)
+
 
 module Seq =
     let groupByTuple (xs : ('a * 'b) seq) =

@@ -1,0 +1,16 @@
+3,4,3,1,2
+# After 18 days:
+#  AdultFish : 2,2,1,5,3,5,3
+#  BabyFish : 0,0,0,0,1,4,0
+#   result: 26 took: 0ms
+#
+# After 80 days:
+#  AdultFish : 739,762,991,424,729,558,790
+#  BabyFish : 0,0,0,370,571,0,0
+#   result: 5934 took: 0ms
+#
+# Part2:
+# After 256 days:
+#  AdultFish : 3164316379,3541830408,3681986557,4275812629,2376852196,2731163883,2897294544
+#  BabyFish : 0,0,0,0,1985489551,2329711392,0
+#    result: 26984457539 took: 0ms
