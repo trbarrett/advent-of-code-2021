@@ -120,6 +120,14 @@ module Math =
         |> Seq.mapi (fun i x -> (int64 (pown 10 i)) * x )
         |> Seq.sum
 
+    /// Takes a seq of int64 digits and converts them into a single number
+    /// based on position. e.g. [ 4; 5; 7; 2; 7 ] -> 45727
+    let digitsToInt32 digits =
+        digits
+        |> Seq.rev
+        |> Seq.mapi (fun i x -> (pown 10 i) * x )
+        |> Seq.sum
+
     /// Takes a seq of 1 or 0 digits and converts them into a single number
     /// based on position. e.g. [ 1; 0; 1; 1; 0 ] -> 22
     let binaryDigitsToInt32 digits =
