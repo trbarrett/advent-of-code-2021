@@ -22,7 +22,7 @@ module Heightmap =
     let adjacentPointsAndValues heightmap pt =
         adjacentPoints pt
         |> Array.choose (fun pt ->
-            tryValueAtPoint heightmap pt |> Option.map (fun value -> pt, value))
+            tryValueAtPoint heightmap pt |> Option.map (mkTuple pt))
 
     let allPoints heightmap =
         [| for x in [0..(heightmap.Width - 1)] do
