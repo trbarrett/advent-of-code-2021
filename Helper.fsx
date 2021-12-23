@@ -29,6 +29,15 @@ let public readLinesWithSlashComments inputName =
     |> File.ReadLines
     |> Seq.filter (fun (str : System.String) -> not (str.StartsWith("//")))
 
+let splitOnEmptyLines lines =
+    (lines, [[]])
+    ||> Seq.foldBack (fun line acc ->
+        match line, acc with
+        | "", _ -> []::acc
+        | _, curr::rest -> (line::curr)::rest
+        | _ -> failwith "Not Possible")
+
+
 let (|KeyValue|) (keyValuePair : KeyValuePair<'k, 'v>) : 'k * 'v =
     let k = keyValuePair.Key
     let v = keyValuePair.Value
@@ -105,6 +114,12 @@ module String =
 
     let splitIntoMatching regexPattern (input : string) =
         Regex.Matches(input, regexPattern)
+        |> Seq.map (fun x -> x.Value)
+        |> List.ofSeq
+
+    let capture regexPattern (input : string) =
+        Regex.Match(input, regexPattern).Groups
+        |> Seq.skip 1
         |> Seq.map (fun x -> x.Value)
         |> List.ofSeq
 
