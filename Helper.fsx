@@ -59,8 +59,30 @@ module Map =
         let flatten = (fun (KeyValue(x, ys)) -> ys |> Seq.map (mkTuple x))
         Seq.collect flatten m
 
+    let keys map =
+        map |> Map.toSeq |> Seq.map fst
+
     let mapValues f m =
        m |> Map.map (fun _ v -> f v)
+
+    let merge f mapA mapB =
+       let allKeys = [mapA; mapB] |> Seq.collect keys |> Seq.distinct
+
+       (Map [], allKeys)
+       ||> Seq.fold (fun acc key ->
+           let aValue = mapA |> Map.tryFind key
+           let bValue = mapB |> Map.tryFind key
+           acc |> Map.add key (f aValue bValue))
+
+    let mergeAll f maps =
+       let allKeys = maps |> Seq.collect keys |> Seq.distinct
+
+       (Map [], allKeys)
+       ||> Seq.fold (fun acc key ->
+           // find the values in all the maps for a given key and combine them
+           // with function f
+           let values = maps |> Seq.map (Map.tryFind key)
+           acc |> Map.add key (f values))
 
 module List =
     let permutationsWithReplacement (values : 'a list) times =
@@ -104,6 +126,10 @@ module Seq =
 
 
 module String =
+
+    let fromChars (chars : seq<char>) : string =
+     new System.String(Array.ofSeq chars)
+
     let split (delimiter : char) (input : string) =
         input.Split delimiter
 

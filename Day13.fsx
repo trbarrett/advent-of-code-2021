@@ -1,7 +1,7 @@
 #load "./Helper.fsx"
 open Helper
 
-// Day 12 - Transparent Origami - Folding paper
+// Day 13 - Transparent Origami - Folding paper
 //
 // Day 1 - Simple maths to fold points on paper represented by a set
 // Day 2 - Print a sparce Set structure representing points on graph, by finding
