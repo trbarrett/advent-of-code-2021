@@ -22,6 +22,12 @@
         <None Include="Day12.fsx" />
         <None Include="Day13.fsx" />
         <None Include="Day14.fsx" />
+        <None Include="Day15Mutable.fsx" />
+        <None Include="Day15Immutable.fsx" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FSharpx.Collections" Version="3.0.1" />
     </ItemGroup>
 
 </Project>
