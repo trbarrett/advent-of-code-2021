@@ -177,7 +177,6 @@ module Math =
         |> Seq.mapi (fun i x -> (int32 (pown 2 i)) * x )
         |> Seq.sum
 
-
 let memoize f =
     let dict = Dictionary<_,_>()
     fun x ->
