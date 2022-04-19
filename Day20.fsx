@@ -7,7 +7,7 @@ open Helper
 //   I used a Map to represent the image, which lets us have an infinite
 //   potential size for the image.
 //   Rather than building up the image layer by layer from the input, I started
-//   with the output layer and work downwards. As we don't know what's in the
+//   with the output layer and worked downwards. As we don't know what's in the
 //   next layer, we have to inspect the layer below and so on. We do this until
 //   we hit the lowest layer which is the input image, then work our way back
 //   up. This method let's us inspect a potentially infinite canvas.
@@ -15,13 +15,14 @@ open Helper
 //   don't need to recalculate everything.
 //
 // Note: Having an infinite size means we could potentially have to transform
-// infinite images. In fact for the real problem we have 1 in the 0 space (and 0
-// in the 511 space), so an infinite amount of pixels flip flop for each cycle
-// of the image. We need to account for that in our calculation, but obviously
-// not perform infinite calculations. So, rather than calculate the whole thing
-// on each step, we should only calculate what we need, when we need it.
+// infinite pixels. In fact for the real problem in the algo we have 1 in the 0
+// space (and 0 in the 511 space), so an infinite amount of pixels flip flop for
+// each cycle of the image. We need to account for that in our calculation, but
+// obviously not perform infinite calculations. So, rather than calculate the
+// whole thing on each step, we should only calculate what we need, when we need
+// it.
 // Both part 1 and part 2 have even number of steps. If they had an odd number
-// the answer would be infinite.
+// the answer would be infinite in size.
 
 let readChar = function | '#' -> 1 | '.' -> 0 | _ -> failwith "Invalid input char"
 
