@@ -28,6 +28,8 @@
         <None Include="Day17.fsx" />
         <None Include="Day18.fsx" />
         <None Include="Day19.fsx" />
+        <None Include="Day20.fsx" />
+        <None Include="Day21.fsx" />
     </ItemGroup>
 
     <ItemGroup>

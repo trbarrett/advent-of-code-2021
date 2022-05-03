@@ -8,7 +8,7 @@ open Helper
 //
 // Part 1 - Do 10 iterations, which is fast enough to do using a naive solution
 // Part 2 - Because the string is pretty much doubling after ever iteration
-//          it quickly becomes to large to operate on effectively (aka the
+//          it quickly becomes too large to operate on effectively (aka the
 //          parable of rice on chess board, doubling each square) so we need a
 //          smarter way of doing it than string manipulation.
 //
