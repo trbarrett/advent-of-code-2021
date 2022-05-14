@@ -113,6 +113,15 @@ module List =
             if i = replaceAt then replacement
             else x)
 
+    /// Given a list of tuples, and treating each tuple as key/value pairs,
+    /// this function will combine the values where there are duplicate pairs
+    /// with the same key
+    let combineKeyValuePairs reducer lst =
+        lst
+        |> List.groupBy fst
+        |> List.map (fun (key, grp) ->
+            key, (grp |> List.map snd |> List.reduce reducer ))
+
 
 module Seq =
     let groupByTuple (xs : ('a * 'b) seq) =
