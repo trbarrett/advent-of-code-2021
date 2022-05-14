@@ -31,7 +31,7 @@ open Helper
 // Performance:
 //   While a lot better than the naive approach, this still isn't as fast as I'd
 //   like it to be. Once solution would be to implement a BSP (Binary Space
-//   Partition) or oct-tree datastructure to do fast lookups of the cuboids
+//   Partition) or oct-tree data-structure to do fast lookups of the cuboids
 //   within the 3d space. At the moment for each cuboid we add we iterate
 //   through every existing one looking for a potential overlap. My assumption
 //   is that is the largest performance issue.
@@ -39,7 +39,7 @@ open Helper
 
 // Note:
 // Inclusive sizes of Cuboids
-// In the input X=10..10, Y=10..10, Z=10..10 is considers to be a 1x1 cube where
+// The input X=10..10, Y=10..10, Z=10..10 is considers to be a 1x1 cube where
 // each item in the range points to a point in the grid.
 // That means the maths in this solution is sometimes a bit odd if you're used
 // to dealing with floating point ranges, because 10..10 would normally have a

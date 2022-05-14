@@ -14,16 +14,16 @@ open Helper
 // to take advantage of the problem space to simplify things.
 //
 // The first advantage we can take is to consider the 3 rolls that each player
-// makes as a single thing with a pre-determined number of permutations.
+// makes as a single roll with a pre-determined number of permutations.
 //
 // The second advantage is we can treat each player as independent from the other
 // player. It doesn't matter what the other player rolls, or what position they
 // are on, the only time the other player affects the game is when considering
 // if the game is over. That allows us to calculate the full universe of states
 // for a single player for each turn/step of the game. After that we just need
-// to look for winning cases and multiply it by the cases the other player
+// to look for winning cases and multiply it by the cases where the other player
 // hasn't won, and is still playing. Once we do that for each player, and each
-// turn/step of the game we'll have our answers
+// turn/step of the game we'll have our full count of wins for each player.
 
 let nextPos pos diceTotal =
     let nextPos = (pos + diceTotal) % 10
