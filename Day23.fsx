@@ -27,58 +27,32 @@ let allHallwayLocations =
     [ Hallway FarLeft; Hallway ALeft; Hallway AB; Hallway BC
       Hallway CD; Hallway DRight; Hallway FarRight ]
 
-let pathStepCost a b =
-   match a, b with
-   | Hallway FarLeft, Hallway ALeft -> 1
-   | Hallway ALeft, Hallway AB -> 2
-   | Hallway AB, Hallway BC -> 2
-   | Hallway BC, Hallway CD -> 2
-   | Hallway CD, Hallway DRight -> 2
-   | Hallway DRight, Hallway FarRight -> 1
-   | Hallway FarRight, Hallway DRight -> 1
-   | Hallway DRight, Hallway CD -> 2
-   | Hallway CD, Hallway BC -> 2
-   | Hallway BC, Hallway AB -> 2
-   | Hallway AB, Hallway ALeft -> 2
-   | Hallway ALeft, Hallway FarLeft -> 1
-   | Hallway ALeft, SideRoom (RoomA, Top) -> 2
-   | Hallway AB, SideRoom (RoomA, Top) -> 2
-   | Hallway AB, SideRoom (RoomB, Top) -> 2
-   | Hallway BC, SideRoom (RoomB, Top) -> 2
-   | Hallway BC, SideRoom (RoomC, Top) -> 2
-   | Hallway CD, SideRoom (RoomC, Top) -> 2
-   | Hallway CD, SideRoom (RoomD, Top) -> 2
-   | Hallway DRight, SideRoom (RoomD, Top) -> 2
-   | SideRoom (RoomA, Top), Hallway ALeft  -> 2
-   | SideRoom (RoomA, Top), Hallway AB -> 2
-   | SideRoom (RoomB, Top), Hallway AB -> 2
-   | SideRoom (RoomB, Top), Hallway BC -> 2
-   | SideRoom (RoomC, Top), Hallway BC -> 2
-   | SideRoom (RoomC, Top), Hallway CD -> 2
-   | SideRoom (RoomD, Top), Hallway CD -> 2
-   | SideRoom (RoomD, Top), Hallway DRight -> 2
-   | SideRoom (x, Top), SideRoom (y, Bottom) when x = y -> 1
-   | SideRoom (x, Bottom), SideRoom (y, Top) when x = y -> 1
-   | _, _ -> failwithf "Invalid path step from: (%A) to (%A)" a b
+let amphipodCost = function
+    | "A" -> 1.
+    | "B" -> 10.
+    | "C" -> 100.
+    | "D" -> 1000.
 
-let pathCost startLocation path =
-    startLocation::path
-    |> List.pairwise
-    |> List.map (fun (a, b) -> pathStepCost a b)
-    |> List.sum
-    |> double
+let memoize fn =
+  let cache = new System.Collections.Generic.Dictionary<_,_>()
+  (fun x ->
+    match cache.TryGetValue x with
+    | true, v -> v
+    | false, _ -> let v = fn (x)
+                  cache.Add(x,v)
+                  v)
 
-let rec pathToPosition locationA locationB =
+let rec pathToPosition' (locationA, locationB) =
     match locationA, locationB with
     // fix these ones
     | SideRoom (room, x), Hallway FarLeft ->
-        (pathToPosition (SideRoom (room, x)) (Hallway ALeft)) @ [Hallway FarLeft]
+        (pathToPosition' (SideRoom (room, x), Hallway ALeft)) @ [Hallway FarLeft]
     | SideRoom (room, x), Hallway FarRight ->
-        (pathToPosition (SideRoom (room, x)) (Hallway DRight)) @ [Hallway FarRight]
+        (pathToPosition' (SideRoom (room, x), Hallway DRight)) @ [Hallway FarRight]
     | SideRoom (roomX, x), SideRoom (roomY, Bottom) ->
-        (pathToPosition (SideRoom (roomX, x)) (SideRoom (roomY, Top))) @ [SideRoom (roomY, Bottom)]
+        (pathToPosition' (SideRoom (roomX, x), SideRoom (roomY, Top))) @ [SideRoom (roomY, Bottom)]
     | SideRoom (room, Bottom), x ->
-        SideRoom (room, Top)::(pathToPosition (SideRoom (room, Top)) x)
+        SideRoom (room, Top)::(pathToPosition' (SideRoom (room, Top), x))
 
     | SideRoom (RoomA, Top), Hallway ALeft -> [Hallway ALeft]
     | SideRoom (RoomA, Top), Hallway AB -> [Hallway AB]
@@ -125,60 +99,62 @@ let rec pathToPosition locationA locationB =
 
     // hallway to side room is just the inverse of a side room to a hallway
     | Hallway x, y ->
-        pathToPosition y (Hallway x)
+        pathToPosition' (y,Hallway x)
         |> List.rev
         |> List.tail // because we don't want the starting location
         |> fun lst -> lst @ [y]
 
+let pathToPosition = memoize pathToPosition'
 
-// Note this creates a path in reverse, and includes the from, but not the
-// target location. This doesn't feel right
-let rec pathToPositionRev locationA locationB =
+let rec costAToB (locationA, locationB) =
     match locationA, locationB with
-    | SideRoom (room, x), Hallway FarLeft ->
-        (Hallway ALeft)::(pathToPositionRev (SideRoom (room, x)) (Hallway ALeft))
-    | SideRoom (room, x), Hallway FarRight ->
-        (Hallway DRight)::(pathToPositionRev (SideRoom (room, x)) (Hallway DRight))
-    | SideRoom (roomX, x), SideRoom (roomY, Bottom) ->
-        SideRoom (RoomB, Top)::(pathToPositionRev (SideRoom (roomX, x)) (SideRoom (roomX, Top)))
-    | SideRoom (room, Bottom), x ->
-        (pathToPositionRev (SideRoom (room, Top))) x @ [SideRoom (room, Bottom)]
+    | SideRoom (RoomA, Top), Hallway FarLeft -> 3.
+    | SideRoom (RoomA, Top), Hallway ALeft -> 2.
+    | SideRoom (RoomA, Top), Hallway AB -> 2.
+    | SideRoom (RoomA, Top), Hallway BC -> 4.
+    | SideRoom (RoomA, Top), Hallway CD -> 6.
+    | SideRoom (RoomA, Top), Hallway DRight -> 8.
+    | SideRoom (RoomA, Top), Hallway FarRight -> 9.
+    | SideRoom (RoomA, Top), SideRoom (RoomB, x) -> match x with | Top -> 4. | Bottom -> 5.
+    | SideRoom (RoomA, Top), SideRoom (RoomC, x) -> match x with | Top -> 6. | Bottom -> 7.
+    | SideRoom (RoomA, Top), SideRoom (RoomD, x) -> match x with | Top -> 8. | Bottom -> 9.
+    | SideRoom (RoomA, Bottom), x -> costAToB (SideRoom (RoomA, Top), x) + 1.
 
-    | SideRoom (RoomA, Top), Hallway ALeft -> [SideRoom (RoomA, Top)]
-    | SideRoom (RoomA, Top), Hallway AB -> [SideRoom (RoomA, Top)]
-    | SideRoom (RoomA, Top), Hallway BC -> [Hallway AB; SideRoom (RoomA, Top)]
-    | SideRoom (RoomA, Top), Hallway CD -> [Hallway BC; Hallway AB; SideRoom (RoomA, Top)]
-    | SideRoom (RoomA, Top), Hallway DRight -> [Hallway CD; Hallway BC; Hallway AB; SideRoom (RoomA, Top)]
-    | SideRoom (RoomA, Top), SideRoom (RoomB, Top) -> [Hallway AB; SideRoom (RoomA, Top)]
-    | SideRoom (RoomA, Top), SideRoom (RoomC, Top) -> [Hallway BC; Hallway AB; SideRoom (RoomA, Top)]
-    | SideRoom (RoomA, Top), SideRoom (RoomD, Top) -> [Hallway CD; Hallway BC; Hallway AB; SideRoom (RoomA, Top)]
+    | SideRoom (RoomB, Top), Hallway FarLeft -> 5.
+    | SideRoom (RoomB, Top), Hallway ALeft -> 4.
+    | SideRoom (RoomB, Top), Hallway AB -> 2.
+    | SideRoom (RoomB, Top), Hallway BC -> 2.
+    | SideRoom (RoomB, Top), Hallway CD -> 4.
+    | SideRoom (RoomB, Top), Hallway DRight -> 6.
+    | SideRoom (RoomB, Top), Hallway FarRight -> 7.
+    | SideRoom (RoomB, Top), SideRoom (RoomA, x) -> match x with | Top -> 4. | Bottom -> 5.
+    | SideRoom (RoomB, Top), SideRoom (RoomC, x) -> match x with | Top -> 4. | Bottom -> 5.
+    | SideRoom (RoomB, Top), SideRoom (RoomD, x) -> match x with | Top -> 6. | Bottom -> 7.
+    | SideRoom (RoomB, Bottom), x -> costAToB (SideRoom (RoomB, Top), x) + 1.
 
-    | SideRoom (RoomB, Top), Hallway ALeft -> [Hallway AB; SideRoom (RoomB, Top)]
-    | SideRoom (RoomB, Top), Hallway AB -> [SideRoom (RoomB, Top)]
-    | SideRoom (RoomB, Top), Hallway BC -> [SideRoom (RoomB, Top)]
-    | SideRoom (RoomB, Top), Hallway CD -> [Hallway BC; SideRoom (RoomB, Top)]
-    | SideRoom (RoomB, Top), Hallway DRight -> [Hallway CD; Hallway BC; SideRoom (RoomB, Top)]
-    | SideRoom (RoomB, Top), SideRoom (RoomA, x) -> [Hallway AB; SideRoom (RoomB, Top)]
-    | SideRoom (RoomB, Top), SideRoom (RoomC, x) -> [Hallway BC; SideRoom (RoomB, Top)]
-    | SideRoom (RoomB, Top), SideRoom (RoomD, x) -> [Hallway CD; Hallway BC; SideRoom (RoomB, Top)]
+    | SideRoom (RoomC, Top), Hallway FarLeft -> 7.
+    | SideRoom (RoomC, Top), Hallway ALeft -> 6.
+    | SideRoom (RoomC, Top), Hallway AB -> 4.
+    | SideRoom (RoomC, Top), Hallway BC -> 2.
+    | SideRoom (RoomC, Top), Hallway CD -> 2.
+    | SideRoom (RoomC, Top), Hallway DRight -> 4.
+    | SideRoom (RoomC, Top), Hallway FarRight -> 5.
+    | SideRoom (RoomC, Top), SideRoom (RoomA, x) -> match x with | Top -> 6. | Bottom -> 7.
+    | SideRoom (RoomC, Top), SideRoom (RoomB, x) -> match x with | Top -> 4. | Bottom -> 5.
+    | SideRoom (RoomC, Top), SideRoom (RoomD, x) -> match x with | Top -> 4. | Bottom -> 5.
+    | SideRoom (RoomC, Bottom), x -> costAToB (SideRoom (RoomC, Top), x) + 1.
 
-    | SideRoom (RoomC, Top), Hallway ALeft -> [Hallway AB; Hallway BC; SideRoom (RoomC, Top)]
-    | SideRoom (RoomC, Top), Hallway AB -> [Hallway BC; SideRoom (RoomC, Top)]
-    | SideRoom (RoomC, Top), Hallway BC -> [SideRoom (RoomC, Top)]
-    | SideRoom (RoomC, Top), Hallway CD -> [SideRoom (RoomC, Top)]
-    | SideRoom (RoomC, Top), Hallway DRight -> [Hallway CD; SideRoom (RoomC, Top)]
-    | SideRoom (RoomC, Top), SideRoom (RoomA, x) -> [Hallway AB; Hallway BC; SideRoom (RoomC, Top)]
-    | SideRoom (RoomC, Top), SideRoom (RoomB, x) -> [Hallway BC; SideRoom (RoomC, Top)]
-    | SideRoom (RoomC, Top), SideRoom (RoomD, x) -> [Hallway CD; SideRoom (RoomC, Top)]
-
-    | SideRoom (RoomD, Top), Hallway ALeft -> [Hallway AB; Hallway BC; Hallway CD; SideRoom (RoomD, Top)]
-    | SideRoom (RoomD, Top), Hallway AB -> [Hallway BC; Hallway CD; SideRoom (RoomD, Top)]
-    | SideRoom (RoomD, Top), Hallway BC -> [Hallway CD; SideRoom (RoomD, Top)]
-    | SideRoom (RoomD, Top), Hallway CD -> [SideRoom (RoomD, Top)]
-    | SideRoom (RoomD, Top), Hallway DRight -> [SideRoom (RoomD, Top)]
-    | SideRoom (RoomD, Top), SideRoom (RoomA, x) -> [Hallway AB; Hallway BC; Hallway CD; SideRoom (RoomD, Top)]
-    | SideRoom (RoomD, Top), SideRoom (RoomB, x) -> [Hallway BC; Hallway CD; SideRoom (RoomD, Top)]
-    | SideRoom (RoomD, Top), SideRoom (RoomC, x) -> [Hallway CD; SideRoom (RoomD, Top)]
+    | SideRoom (RoomD, Top), Hallway FarLeft -> 9.
+    | SideRoom (RoomD, Top), Hallway ALeft -> 8.
+    | SideRoom (RoomD, Top), Hallway AB -> 6.
+    | SideRoom (RoomD, Top), Hallway BC -> 4.
+    | SideRoom (RoomD, Top), Hallway CD -> 2.
+    | SideRoom (RoomD, Top), Hallway DRight -> 2.
+    | SideRoom (RoomD, Top), Hallway FarRight -> 3.
+    | SideRoom (RoomD, Top), SideRoom (RoomA, x) -> match x with | Top -> 8. | Bottom -> 9.
+    | SideRoom (RoomD, Top), SideRoom (RoomB, x) -> match x with | Top -> 6. | Bottom -> 7.
+    | SideRoom (RoomD, Top), SideRoom (RoomC, x) -> match x with | Top -> 4. | Bottom -> 5.
+    | SideRoom (RoomD, Bottom), x -> costAToB (SideRoom (RoomD, Top), x) + 1.
 
     // invalid moves
     | Hallway _, Hallway _
@@ -188,75 +164,7 @@ let rec pathToPositionRev locationA locationB =
     | SideRoom (RoomD, _), SideRoom (RoomD, _) -> failwithf "Invalid Move %A -> %A" locationA locationB
 
     // hallway to side room is just the inverse of a side room to a hallway
-    | Hallway x, y -> pathToPositionRev y (Hallway x) |> List.rev
-
-
-let rec stepsToPosition locationA locationB =
-    match locationA, locationB with
-    | SideRoom (RoomA, Top), Hallway FarLeft -> 3
-    | SideRoom (RoomA, Top), Hallway ALeft -> 2
-    | SideRoom (RoomA, Top), Hallway AB -> 2
-    | SideRoom (RoomA, Top), Hallway BC -> 4
-    | SideRoom (RoomA, Top), Hallway CD -> 6
-    | SideRoom (RoomA, Top), Hallway DRight -> 8
-    | SideRoom (RoomA, Top), Hallway FarRight -> 9
-    | SideRoom (RoomA, Top), SideRoom (RoomB, x) -> match x with | Top -> 4 | Bottom -> 5
-    | SideRoom (RoomA, Top), SideRoom (RoomC, x) -> match x with | Top -> 6 | Bottom -> 7
-    | SideRoom (RoomA, Top), SideRoom (RoomD, x) -> match x with | Top -> 8 | Bottom -> 9
-    | SideRoom (RoomA, Bottom), x -> stepsToPosition (SideRoom (RoomA, Top)) x + 1
-
-    | SideRoom (RoomB, Top), Hallway FarLeft -> 5
-    | SideRoom (RoomB, Top), Hallway ALeft -> 4
-    | SideRoom (RoomB, Top), Hallway AB -> 2
-    | SideRoom (RoomB, Top), Hallway BC -> 2
-    | SideRoom (RoomB, Top), Hallway CD -> 4
-    | SideRoom (RoomB, Top), Hallway DRight -> 6
-    | SideRoom (RoomB, Top), Hallway FarRight -> 7
-    | SideRoom (RoomB, Top), SideRoom (RoomA, x) -> match x with | Top -> 4 | Bottom -> 5
-    | SideRoom (RoomB, Top), SideRoom (RoomC, x) -> match x with | Top -> 4 | Bottom -> 5
-    | SideRoom (RoomB, Top), SideRoom (RoomD, x) -> match x with | Top -> 6 | Bottom -> 7
-    | SideRoom (RoomB, Bottom), x -> stepsToPosition (SideRoom (RoomB, Top)) x + 1
-
-    | SideRoom (RoomC, Top), Hallway FarLeft -> 7
-    | SideRoom (RoomC, Top), Hallway ALeft -> 6
-    | SideRoom (RoomC, Top), Hallway AB -> 4
-    | SideRoom (RoomC, Top), Hallway BC -> 2
-    | SideRoom (RoomC, Top), Hallway CD -> 2
-    | SideRoom (RoomC, Top), Hallway DRight -> 4
-    | SideRoom (RoomC, Top), Hallway FarRight -> 5
-    | SideRoom (RoomC, Top), SideRoom (RoomA, x) -> match x with | Top -> 6 | Bottom -> 7
-    | SideRoom (RoomC, Top), SideRoom (RoomB, x) -> match x with | Top -> 4 | Bottom -> 5
-    | SideRoom (RoomC, Top), SideRoom (RoomD, x) -> match x with | Top -> 4 | Bottom -> 5
-    | SideRoom (RoomC, Bottom), x -> stepsToPosition (SideRoom (RoomC, Top)) x + 1
-
-    | SideRoom (RoomD, Top), Hallway FarLeft -> 9
-    | SideRoom (RoomD, Top), Hallway ALeft -> 8
-    | SideRoom (RoomD, Top), Hallway AB -> 6
-    | SideRoom (RoomD, Top), Hallway BC -> 4
-    | SideRoom (RoomD, Top), Hallway CD -> 2
-    | SideRoom (RoomD, Top), Hallway DRight -> 2
-    | SideRoom (RoomD, Top), Hallway FarRight -> 3
-    | SideRoom (RoomD, Top), SideRoom (RoomA, x) -> match x with | Top -> 8 | Bottom -> 9
-    | SideRoom (RoomD, Top), SideRoom (RoomB, x) -> match x with | Top -> 6 | Bottom -> 7
-    | SideRoom (RoomD, Top), SideRoom (RoomC, x) -> match x with | Top -> 4 | Bottom -> 5
-    | SideRoom (RoomD, Bottom), x -> stepsToPosition (SideRoom (RoomD, Top)) x + 1
-
-    // invalid moves
-    | Hallway _, Hallway _
-    | SideRoom (RoomA, _), SideRoom (RoomA, _)
-    | SideRoom (RoomB, _), SideRoom (RoomB, _)
-    | SideRoom (RoomC, _), SideRoom (RoomC, _)
-    | SideRoom (RoomD, _), SideRoom (RoomD, _) -> failwithf "Invalid Move %A -> %A" locationA locationB
-
-    // hallway to side room is just the inverse of a side room to a hallway
-    | Hallway x, y -> stepsToPosition y (Hallway x)
-
-//type SimpleState =
-//    { Hallway : string list
-//      SideRoomA : string list
-//      SideRoomB : string list
-//      SideRoomC : string list
-//      SideRoomD : string list }
+    | Hallway x, y -> costAToB (y, Hallway x)
 
 type State =
     { Hallway : (string * HallwayPosition) list
@@ -306,10 +214,6 @@ module State =
         @ ([RoomA; RoomB; RoomC; RoomD]
           |> List.collect (fun x -> sideRoomAmphipodLocations x state))
 
-    //let removeFromHallway hallwayPos state =
-    //    { state with
-    //        Hallway = state.Hallway |> List.filter (fun (_, p) -> p <> hallwayPos) }
-
     let removeFromHallwayAt amphipod hallwayPos state =
         state.Hallway
         |> List.tryFind (fun (_, p) -> p = hallwayPos)
@@ -332,19 +236,6 @@ module State =
         | RoomB -> { state with SideRoomB = removeFromSideRoom state.SideRoomB }
         | RoomC -> { state with SideRoomC = removeFromSideRoom state.SideRoomC }
         | RoomD -> { state with SideRoomD = removeFromSideRoom state.SideRoomD }
-
-    let addAmphipodToHomeRoom room state =
-        let addToRoom amphipod sideRoom =
-            match sideRoom with
-            | [] -> [amphipod]
-            | [a] when a = amphipod -> [amphipod; amphipod]
-            | [x] -> failwithf "Can't add to sideroom with non matching amphipod present. Room %A, amphipod: %A " room x
-            | _ -> failwithf "Sideroom %A is already full, cannot add any more amphipods" room
-        match room with
-        | RoomA -> { state with SideRoomA = addToRoom "A" state.SideRoomA }
-        | RoomB -> { state with SideRoomB = addToRoom "B" state.SideRoomB }
-        | RoomC -> { state with SideRoomC = addToRoom "C" state.SideRoomC }
-        | RoomD -> { state with SideRoomD = addToRoom "D" state.SideRoomD }
 
     let setSideRoom room sideRoomState state =
         match room with
@@ -451,37 +342,6 @@ let roomAmphipod room =
     | RoomC -> "C"
     | RoomD -> "D"
 
-let hallwayPathToRoom amphipod pos =
-    let rec hallwayPathToRoom' amphipod pos path =
-        match pos with
-        | FarLeft ->
-            hallwayPathToRoom' amphipod ALeft (ALeft::path)
-        | ALeft ->
-            match amphipod with
-            | "A" -> path
-            | _ -> hallwayPathToRoom' amphipod AB (AB::path)
-        | AB ->
-            match amphipod with
-            | "A" | "B" -> path
-            | _ -> hallwayPathToRoom' amphipod BC (BC::path)
-        | BC ->
-            match amphipod with
-            | "A" -> hallwayPathToRoom' amphipod AB (AB::path)
-            | "C" | "B" -> path
-            | "D" -> hallwayPathToRoom' amphipod CD (CD::path)
-            | _ -> failwith "Invalid amphipod"
-        | CD ->
-            match amphipod with
-            | "C" | "D" -> path
-            | _ -> hallwayPathToRoom' amphipod BC (BC::path)
-        | DRight ->
-            match amphipod with
-            | "D" -> path
-            | _ -> hallwayPathToRoom' amphipod CD (CD::path)
-        | FarRight ->
-            hallwayPathToRoom' amphipod DRight (DRight::path)
-    hallwayPathToRoom' amphipod pos []
-
 let amphipodAtLocation state location =
     match location with
     | Hallway h ->
@@ -499,7 +359,7 @@ let amphipodAtLocation state location =
         | _ -> None
 
 let isMoveFree state from target =
-    pathToPosition from target
+    pathToPosition (from, target)
     |> List.forall (fun step ->
         amphipodAtLocation state step
         |> Option.isNone)
@@ -604,8 +464,8 @@ let neighbours state =
             |> State.addToState move.Amphipod move.To
 
         let cost =
-            pathToPosition move.From move.To
-            |> pathCost move.From
+            costAToB (move.From, move.To)
+            |> (*) (amphipodCost move.Amphipod)
 
         nextState, cost)
 
@@ -627,7 +487,6 @@ let unfilledAmphipods amphipodLocations =
         | Hallway _ -> true
         | SideRoom (room, _) -> room <> amphipodSideRoom x)
 
-
 let rec heuristic (state : State) =
     // find the positions that don't already have the right amphipod
     let unfilledPositions = unfilledPositions state
@@ -648,9 +507,12 @@ let rec heuristic (state : State) =
                     | SideRoom (unfilledRoom, roomPos) ->
                         unfilledRoom = amphipodSideRoom amphipod
                     | Hallway _ -> false)
-            //printfn "Heuristic: %A -> %A = %A" loc positionToFill (stepsToPosition loc positionToFill)
-            unfilledPositions,
-            stepsAcc + (float (stepsToPosition loc positionToFill)))
+
+            let cost =
+                costAToB (loc, positionToFill)
+                |> (*) (amphipodCost amphipod)
+            unfilledPositions, stepsAcc + cost)
+
     steps
 
 
@@ -870,7 +732,7 @@ let part1 (startState : State) =
 // 7 spots to consider in the hallway: FarLeft, ALeft, AB, BC, CD, DRight, FarRight
 
 
-let input = readLinesWithSlashComments "day23-example1.txt" |> parseInput
+let input = readLinesWithSlashComments "day23.txt" |> parseInput
 
 Helper.measurePart1 part1 input
 

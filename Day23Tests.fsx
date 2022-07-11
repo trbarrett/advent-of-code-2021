@@ -69,18 +69,18 @@ let stateTests =
 let pathingTests =
     testList "Path Tests" [
         testCase "pathToPosition" <| fun _ ->
-            pathToPosition (SideRoom (RoomA, Top)) (Hallway ALeft)
+            pathToPosition (SideRoom (RoomA, Top), Hallway ALeft)
             |> Expect.equal "" [ Hallway ALeft ]
-            pathToPosition (SideRoom (RoomA, Top)) (Hallway FarRight)
+            pathToPosition (SideRoom (RoomA, Top), Hallway FarRight)
             |> Expect.equal "" [ Hallway AB; Hallway BC; Hallway CD
                                  Hallway DRight; Hallway FarRight ]
-            pathToPosition (SideRoom (RoomC, Bottom)) (Hallway FarLeft)
+            pathToPosition (SideRoom (RoomC, Bottom), Hallway FarLeft)
             |> Expect.equal "" [ SideRoom (RoomC, Top); Hallway BC; Hallway AB
                                  Hallway ALeft; Hallway FarLeft ]
-            pathToPosition (Hallway FarLeft) (SideRoom (RoomC, Bottom))
+            pathToPosition (Hallway FarLeft, SideRoom (RoomC, Bottom))
             |> Expect.equal "" [ Hallway ALeft; Hallway AB; Hallway BC
                                  SideRoom (RoomC, Top); SideRoom (RoomC, Bottom) ]
-            pathToPosition (SideRoom (RoomB, Bottom)) (SideRoom (RoomD, Bottom))
+            pathToPosition (SideRoom (RoomB, Bottom), SideRoom (RoomD, Bottom))
             |> Expect.equal "" [ SideRoom (RoomB, Top); Hallway BC; Hallway CD
                                  SideRoom (RoomD, Top); SideRoom (RoomD, Bottom) ]
 
@@ -146,14 +146,14 @@ let heuristicsTest =
             |> Expect.equal "" expected
 
         testCase "heuristicsTest" <| fun _ ->
-            //Room 1: B -> 5 (Top -> Bottom)
-            //Room 2: C -> 4 (Top -> Top)
-            //Room 2: D -> 8 (Bottom -> Bottom)
-            //Room 3: B -> 4 (Top -> Top)
-            //Room 4: A -> 9 (Bottom -> Top)
-            //           = 30
+            //Room 1: B -> 5 * 10(Top -> Bottom)
+            //Room 2: C -> 4 * 100 (Top -> Top)
+            //Room 2: D -> 8 * 1000(Bottom -> Bottom)
+            //Room 3: B -> 4 * 10 (Top -> Top)
+            //Room 4: A -> 9 * 1 (Bottom -> Top)
+            //           = 8499
             heuristic state
-            |> Expect.equal "" 30.0
+            |> Expect.equal "" 8499.0
     ]
 
 let testList = testList "Day22Tests" [ parseInputTest; stateTests; heuristicsTest; neighboursTest; pathingTests ]

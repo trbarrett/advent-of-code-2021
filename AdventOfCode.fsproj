@@ -34,9 +34,7 @@
         <None Include="Day21Part2.fsx" />
         <None Include="Day22.fsx" />
         <None Include="Day22Tests.fsx" />
-        <None Include="Day23-2.fsx" />
         <None Include="Day23.fsx" />
-        <None Include="Day23fst.fsx" />
         <None Include="Day23Tests.fsx" />
     </ItemGroup>
 
