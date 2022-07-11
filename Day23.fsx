@@ -49,7 +49,8 @@ let pathStepCost a b =
    | Hallway CD, SideRoom (RoomC, Top) -> 2
    | Hallway CD, SideRoom (RoomD, Top) -> 2
    | Hallway DRight, SideRoom (RoomD, Top) -> 2
-   | SideRoom (RoomA, Top), Hallway AB  -> 2
+   | SideRoom (RoomA, Top), Hallway ALeft  -> 2
+   | SideRoom (RoomA, Top), Hallway AB -> 2
    | SideRoom (RoomB, Top), Hallway AB -> 2
    | SideRoom (RoomB, Top), Hallway BC -> 2
    | SideRoom (RoomC, Top), Hallway BC -> 2
@@ -305,13 +306,13 @@ module State =
         @ ([RoomA; RoomB; RoomC; RoomD]
           |> List.collect (fun x -> sideRoomAmphipodLocations x state))
 
-    let removeFromHallway hallwayPos state =
-        { state with
-            Hallway = state.Hallway |> List.filter (fun (_, p) -> p <> hallwayPos) }
+    //let removeFromHallway hallwayPos state =
+    //    { state with
+    //        Hallway = state.Hallway |> List.filter (fun (_, p) -> p <> hallwayPos) }
 
     let removeFromHallwayAt amphipod hallwayPos state =
         state.Hallway
-        |> List.tryFind (fun (_, p) -> p <> hallwayPos)
+        |> List.tryFind (fun (_, p) -> p = hallwayPos)
         |> function
            | None -> failwithf "Nothing in hallway at: %A" hallwayPos
            | Some (a,_) as x ->
@@ -392,6 +393,33 @@ module State =
         match location with
         | Hallway hallwayPos -> addToHallway amphipod hallwayPos state
         | SideRoom (room, roomPos) -> addToSideRoomAt amphipod room roomPos state
+
+    let printHallway state =
+        printfn "#%s%s.%s.%s.%s.%s%s#"
+            (amphipodAt (Hallway FarLeft) state |> Option.defaultValue "-")
+            (amphipodAt (Hallway ALeft) state |> Option.defaultValue "-")
+            (amphipodAt (Hallway AB) state |> Option.defaultValue "-")
+            (amphipodAt (Hallway BC) state |> Option.defaultValue "-")
+            (amphipodAt (Hallway CD) state |> Option.defaultValue "-")
+            (amphipodAt (Hallway DRight) state |> Option.defaultValue "-")
+            (amphipodAt (Hallway FarRight) state |> Option.defaultValue "-")
+
+    let printRooms state =
+        printfn "###%s#%s#%s#%s###"
+            (amphipodAt (SideRoom (RoomA, Top)) state |> Option.defaultValue "-")
+            (amphipodAt (SideRoom (RoomB, Top)) state |> Option.defaultValue "-")
+            (amphipodAt (SideRoom (RoomC, Top)) state |> Option.defaultValue "-")
+            (amphipodAt (SideRoom (RoomD, Top)) state |> Option.defaultValue "-")
+
+        printfn "###%s#%s#%s#%s###"
+            (amphipodAt (SideRoom (RoomA, Bottom)) state |> Option.defaultValue "-")
+            (amphipodAt (SideRoom (RoomB, Bottom)) state |> Option.defaultValue "-")
+            (amphipodAt (SideRoom (RoomC, Bottom)) state |> Option.defaultValue "-")
+            (amphipodAt (SideRoom (RoomD, Bottom)) state |> Option.defaultValue "-")
+
+    let print state =
+        printHallway state
+        printRooms state
 
 let goalState =
     { Hallway = []
@@ -478,18 +506,21 @@ let isMoveFree state from target =
 
 type Move = { Amphipod: string; From : Location; To: Location }
 
-let possibleHallwayToRoomMove state (amphipod, pos : HallwayPosition) =
+let possibleHallwayToRoomMove state (amphipod, hallwayPos : HallwayPosition) =
     // get the sideroom this amphipod needs to be in. That's the only possible
     // room they could move to
     Some (desiredSideRoom state amphipod)
     // items in the hallway can only move into their sideroom if
     // it's empty or it contains their own type of amphipod
-    |> Option.filter (fun room -> List.isEmpty room || List.head room = amphipod)
+    |> Option.filter (fun room ->
+        List.isEmpty room ||
+        (List.length room = 1 && List.head room = amphipod))
     // items in the hallway can't move through other items in the hallway
-    |> Option.map (fun _ ->
+    |> Option.map (fun room ->
+        let roomPos = if room = [] then Bottom else Top
         { Amphipod = amphipod
-          From = Hallway pos
-          To = SideRoom (amphipodSideRoom amphipod, Top) })
+          From = Hallway hallwayPos
+          To = SideRoom (amphipodSideRoom amphipod, roomPos) })
     |> Option.filter (fun move ->
         isMoveFree state move.From move.To)
 
@@ -550,7 +581,6 @@ let possibleSideRoomMoves room state =
                   From = SideRoom (room, roomPos)
                   To = Hallway pos })
             |> List.filter (fun move ->
-                printfn "Possible Move %A" move
                 isMoveFree state move.From move.To)
 
 let allPossibleSideRoomMoves state =
@@ -650,7 +680,6 @@ let astar start goal h =
         | None -> totalPath
         | Some current -> reconstructPath cameFrom current (current::totalPath)
 
-    // TODO - fscore is complicated! It's a map, it's a set, it's a heap, how do represent that
     // Use a Map since it's a sorted tree. Seq |> head will get you the minElement
     let rec processNeighbour openSet cameFrom (gScore : Map<_,double>) fScore current (neighbor, neighborScore) =
         // d(current,neighbor) is the weight of the edge from current to neighbor
@@ -682,7 +711,7 @@ let astar start goal h =
             //if neighbor not in openSet
             //    openSet.add(neighbor)
             let openSet = Set.add neighbor openSet
-            printfn "Adding neighbour with score: %A" fullPathScore
+            //printfn "Adding neighbour with score: %A" fullPathScore
             openSet, cameFrom, gScore, fScore
         else
             openSet, cameFrom, gScore, fScore
@@ -690,15 +719,28 @@ let astar start goal h =
     let rec mainLoop openSet cameFrom gScore (fScore : Map<_,Set<_>>) =
         // Note: Seq.head will grab the min key value from a map because the
         // underlying implementation of an F# map is a sorted tree.
-        let current = fScore |> Seq.head |> (fun kvp -> kvp.Value) |> Seq.head
+        let fScoreHead = fScore |> Seq.head
+        let current = fScoreHead.Value.MinimumElement
+        let fScore =
+            if Set.count fScoreHead.Value > 1
+            then fScore |> Map.add fScoreHead.Key (fScoreHead.Value |> Set.remove current)
+            else fScore |> Map.remove fScoreHead.Key
 
-        if current = goal then Some (reconstructPath cameFrom current [])
+        //printfn "Current"
+        //State.print current
+
+        if current = goal
+        then Some (reconstructPath cameFrom current [goal], Map.find goal gScore)
         elif Set.isEmpty openSet
         then None
         else
             let openSet = Set.remove current openSet
             let neighbours = neighbours current
-            printfn "Neighbours count: %A" (List.length neighbours)
+            //printfn "Neighbours"
+            //neighbours |> List.iter (fun (state, c) -> printfn "%A:" c; State.printHallway state)
+            //printfn "Neighbours count: %A" (List.length neighbours)
+            //printfn "fScore length: %A" (Map.count fScore)
+            //printfn "openSet length: %A" (Set.count openSet)
             let openSet, cameFrom, gScore, fScore =
                 ((openSet, cameFrom, gScore, fScore), neighbours)
                 ||> List.fold (fun (openSet, cameFrom, gScore, fScore) neighbour ->
@@ -733,9 +775,17 @@ let astar start goal h =
 
 
 let part1 (startState : State) =
-    astar startState goalState heuristic
-    |> Option.get
-    |> List.length
+    let solutionSteps, cost =
+        astar startState goalState heuristic
+        |> Option.get
+
+    printfn "Solution:"
+    solutionSteps
+    |> List.iter (fun state ->
+        printfn "---"
+        State.print state)
+
+    solutionSteps |> List.length, cost
     // Correct Answer:  took:
 
 // Solution space feels large when we consider every possible step.

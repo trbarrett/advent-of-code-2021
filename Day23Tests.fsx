@@ -156,8 +156,6 @@ let heuristicsTest =
             |> Expect.equal "" 30.0
     ]
 
-// path test
-
 let testList = testList "Day22Tests" [ parseInputTest; stateTests; heuristicsTest; neighboursTest; pathingTests ]
 
 runTestsWithCLIArgs [] [||] testList
