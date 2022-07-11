@@ -380,7 +380,7 @@ let astar start goal h =
 //
 // NOTE: an amphipods can never stop outside of a side room, so there's only ever
 // 7 spots to consider in the hallway: FarLeft, ALeft, AB, BC, CD, DRight, FarRight
-Helper.measurePart1 part1 input
+//Helper.measurePart1 part1 input
 
 
 

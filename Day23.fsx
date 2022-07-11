@@ -1,5 +1,6 @@
 #load "./Helper.fsx"
 open Helper
+open System
 
 // Day 23: Amphipod
 
@@ -10,7 +11,6 @@ open Helper
 
 type HallwayPosition =
     | FarLeft | ALeft | AB | BC | CD | DRight | FarRight
-
 
 type SideRoomPosition = | Top | Bottom
 
@@ -65,19 +65,83 @@ let pathCost startLocation path =
     |> List.pairwise
     |> List.map (fun (a, b) -> pathStepCost a b)
     |> List.sum
+    |> double
+
+let rec pathToPosition locationA locationB =
+    match locationA, locationB with
+    // fix these ones
+    | SideRoom (room, x), Hallway FarLeft ->
+        (pathToPosition (SideRoom (room, x)) (Hallway ALeft)) @ [Hallway FarLeft]
+    | SideRoom (room, x), Hallway FarRight ->
+        (pathToPosition (SideRoom (room, x)) (Hallway DRight)) @ [Hallway FarRight]
+    | SideRoom (roomX, x), SideRoom (roomY, Bottom) ->
+        (pathToPosition (SideRoom (roomX, x)) (SideRoom (roomY, Top))) @ [SideRoom (roomY, Bottom)]
+    | SideRoom (room, Bottom), x ->
+        SideRoom (room, Top)::(pathToPosition (SideRoom (room, Top)) x)
+
+    | SideRoom (RoomA, Top), Hallway ALeft -> [Hallway ALeft]
+    | SideRoom (RoomA, Top), Hallway AB -> [Hallway AB]
+    | SideRoom (RoomA, Top), Hallway BC -> [Hallway AB; Hallway BC]
+    | SideRoom (RoomA, Top), Hallway CD -> [Hallway AB; Hallway BC; Hallway CD]
+    | SideRoom (RoomA, Top), Hallway DRight -> [Hallway AB; Hallway BC; Hallway CD; Hallway DRight]
+    | SideRoom (RoomA, Top), SideRoom (RoomB, Top) -> [Hallway AB; SideRoom (RoomB, Top)]
+    | SideRoom (RoomA, Top), SideRoom (RoomC, Top) -> [Hallway AB; Hallway BC; SideRoom (RoomC, Top)]
+    | SideRoom (RoomA, Top), SideRoom (RoomD, Top) -> [Hallway AB; Hallway BC; Hallway CD; SideRoom (RoomD, Top)]
+
+    | SideRoom (RoomB, Top), Hallway ALeft -> [Hallway AB; Hallway ALeft]
+    | SideRoom (RoomB, Top), Hallway AB -> [Hallway AB]
+    | SideRoom (RoomB, Top), Hallway BC -> [Hallway BC]
+    | SideRoom (RoomB, Top), Hallway CD -> [Hallway BC; Hallway CD]
+    | SideRoom (RoomB, Top), Hallway DRight -> [Hallway BC; Hallway CD; Hallway DRight]
+    | SideRoom (RoomB, Top), SideRoom (RoomA, Top) -> [Hallway AB; SideRoom (RoomA, Top)]
+    | SideRoom (RoomB, Top), SideRoom (RoomC, Top) -> [Hallway BC; SideRoom (RoomC, Top)]
+    | SideRoom (RoomB, Top), SideRoom (RoomD, Top) -> [Hallway BC; Hallway CD; SideRoom (RoomD, Top)]
+
+    | SideRoom (RoomC, Top), Hallway ALeft -> [Hallway BC; Hallway AB; Hallway ALeft]
+    | SideRoom (RoomC, Top), Hallway AB -> [Hallway BC; Hallway AB]
+    | SideRoom (RoomC, Top), Hallway BC -> [Hallway BC]
+    | SideRoom (RoomC, Top), Hallway CD -> [Hallway CD]
+    | SideRoom (RoomC, Top), Hallway DRight -> [Hallway CD; Hallway DRight]
+    | SideRoom (RoomC, Top), SideRoom (RoomA, Top) -> [Hallway BC; Hallway AB; SideRoom (RoomA, Top)]
+    | SideRoom (RoomC, Top), SideRoom (RoomB, Top) -> [Hallway BC; SideRoom (RoomB, Top)]
+    | SideRoom (RoomC, Top), SideRoom (RoomD, Top) -> [Hallway CD; SideRoom (RoomD, Top)]
+
+    | SideRoom (RoomD, Top), Hallway ALeft -> [Hallway CD; Hallway BC; Hallway AB; Hallway ALeft]
+    | SideRoom (RoomD, Top), Hallway AB -> [Hallway CD; Hallway BC; Hallway AB]
+    | SideRoom (RoomD, Top), Hallway BC -> [Hallway CD; Hallway BC]
+    | SideRoom (RoomD, Top), Hallway CD -> [Hallway CD]
+    | SideRoom (RoomD, Top), Hallway DRight -> [Hallway DRight]
+    | SideRoom (RoomD, Top), SideRoom (RoomA, Top) -> [Hallway CD; Hallway BC; Hallway AB; SideRoom (RoomA, Top)]
+    | SideRoom (RoomD, Top), SideRoom (RoomB, Top) -> [Hallway CD; Hallway BC; SideRoom (RoomB, Top)]
+    | SideRoom (RoomD, Top), SideRoom (RoomC, Top) -> [Hallway CD; SideRoom (RoomC, Top)]
+
+    // invalid moves
+    | Hallway _, Hallway _
+    | SideRoom (RoomA, _), SideRoom (RoomA, _)
+    | SideRoom (RoomB, _), SideRoom (RoomB, _)
+    | SideRoom (RoomC, _), SideRoom (RoomC, _)
+    | SideRoom (RoomD, _), SideRoom (RoomD, _) -> failwithf "Invalid Move %A -> %A" locationA locationB
+
+    // hallway to side room is just the inverse of a side room to a hallway
+    | Hallway x, y ->
+        pathToPosition y (Hallway x)
+        |> List.rev
+        |> List.tail // because we don't want the starting location
+        |> fun lst -> lst @ [y]
+
 
 // Note this creates a path in reverse, and includes the from, but not the
 // target location. This doesn't feel right
-let rec pathToPosition locationA locationB =
+let rec pathToPositionRev locationA locationB =
     match locationA, locationB with
     | SideRoom (room, x), Hallway FarLeft ->
-        (Hallway ALeft)::(pathToPosition (SideRoom (room, x)) (Hallway ALeft))
+        (Hallway ALeft)::(pathToPositionRev (SideRoom (room, x)) (Hallway ALeft))
     | SideRoom (room, x), Hallway FarRight ->
-        (Hallway DRight)::(pathToPosition (SideRoom (room, x)) (Hallway DRight))
+        (Hallway DRight)::(pathToPositionRev (SideRoom (room, x)) (Hallway DRight))
     | SideRoom (roomX, x), SideRoom (roomY, Bottom) ->
-        SideRoom (RoomB, Top)::(pathToPosition (SideRoom (roomX, x)) (SideRoom (roomX, Top)))
+        SideRoom (RoomB, Top)::(pathToPositionRev (SideRoom (roomX, x)) (SideRoom (roomX, Top)))
     | SideRoom (room, Bottom), x ->
-        (pathToPosition (SideRoom (room, Top))) x @ [SideRoom (room, Bottom)]
+        (pathToPositionRev (SideRoom (room, Top))) x @ [SideRoom (room, Bottom)]
 
     | SideRoom (RoomA, Top), Hallway ALeft -> [SideRoom (RoomA, Top)]
     | SideRoom (RoomA, Top), Hallway AB -> [SideRoom (RoomA, Top)]
@@ -120,10 +184,10 @@ let rec pathToPosition locationA locationB =
     | SideRoom (RoomA, _), SideRoom (RoomA, _)
     | SideRoom (RoomB, _), SideRoom (RoomB, _)
     | SideRoom (RoomC, _), SideRoom (RoomC, _)
-    | SideRoom (RoomD, _), SideRoom (RoomD, _) -> failwithf "Invalid Move"
+    | SideRoom (RoomD, _), SideRoom (RoomD, _) -> failwithf "Invalid Move %A -> %A" locationA locationB
 
     // hallway to side room is just the inverse of a side room to a hallway
-    | Hallway x, y -> pathToPosition y (Hallway x) |> List.rev
+    | Hallway x, y -> pathToPositionRev y (Hallway x) |> List.rev
 
 
 let rec stepsToPosition locationA locationB =
@@ -181,7 +245,7 @@ let rec stepsToPosition locationA locationB =
     | SideRoom (RoomA, _), SideRoom (RoomA, _)
     | SideRoom (RoomB, _), SideRoom (RoomB, _)
     | SideRoom (RoomC, _), SideRoom (RoomC, _)
-    | SideRoom (RoomD, _), SideRoom (RoomD, _) -> failwithf "Invalid Move"
+    | SideRoom (RoomD, _), SideRoom (RoomD, _) -> failwithf "Invalid Move %A -> %A" locationA locationB
 
     // hallway to side room is just the inverse of a side room to a hallway
     | Hallway x, y -> stepsToPosition y (Hallway x)
@@ -211,9 +275,51 @@ module State =
         | RoomC -> state.SideRoomC
         | RoomD -> state.SideRoomD
 
+    let amphipodAtSideRoomPos room roomPos state =
+        let sideRoom = sideRoom room state
+        match roomPos, sideRoom with
+        | Top, x::_::[] -> Some x
+        | Bottom, _::x::[] -> Some x
+        | Bottom, x::[] -> Some x
+        | _ -> None
+
+    let amphipodAt location state =
+        match location with
+        | Hallway hallwayPos ->
+            state.Hallway
+            |> List.tryFind (fun (_, p) -> p = hallwayPos)
+            |> Option.map fst
+        | SideRoom (room, roomPos) ->
+            amphipodAtSideRoomPos room roomPos state
+
+    let sideRoomAmphipodLocations room state =
+        match sideRoom room state with
+        | [x] -> [ x, SideRoom (room, Bottom) ]
+        | [top; bottom] -> [ top, SideRoom (room, Top)
+                             bottom, SideRoom (room, Bottom) ]
+        | _ -> []
+
+    let allAmphipodLocations state =
+        (state.Hallway
+         |> List.map (fun (x, hallwayPos) -> x, Hallway hallwayPos))
+        @ ([RoomA; RoomB; RoomC; RoomD]
+          |> List.collect (fun x -> sideRoomAmphipodLocations x state))
+
     let removeFromHallway hallwayPos state =
         { state with
             Hallway = state.Hallway |> List.filter (fun (_, p) -> p <> hallwayPos) }
+
+    let removeFromHallwayAt amphipod hallwayPos state =
+        state.Hallway
+        |> List.tryFind (fun (_, p) -> p <> hallwayPos)
+        |> function
+           | None -> failwithf "Nothing in hallway at: %A" hallwayPos
+           | Some (a,_) as x ->
+               if a <> amphipod
+               then failwithf "Amphipod: %A in hallway at: %A doesn't match: %A" a hallwayPos amphipod
+               else
+                { state with
+                    Hallway = state.Hallway |> List.filter (fun (_, p) -> p <> hallwayPos) }
 
     let removeNextFromRoom room state =
         let removeFromSideRoom sideRoom =
@@ -258,6 +364,20 @@ module State =
         let sideRoom = sideRoom room state
         setSideRoom room (updateSideRoom amphipod roomPos sideRoom) state
 
+    let removeFromSideRoomAt amphipod room roomPos state =
+        let updateSideRoom amphipod roomPos sideRoom =
+            match sideRoom, roomPos with
+            | [], _ -> failwithf "Can't remove from empty sideroom: %A" room
+            | [_], Top -> failwithf "Can't remove from top of room when nothing at the top. Room %A" room
+            | [x], Bottom when x = amphipod -> []
+            | [x], Bottom when x <> amphipod -> failwithf "Can't remove from Bottom of sideroom when non matching amphipod is present. Room %A, amphipod %A" room x
+            | [y;x], Bottom  -> failwithf "Can't remove from Bottom of sideroom when Top is filled. Room %A, amphipod %A, Top %A" room x y
+            | [x;y], Top when x = amphipod -> [y]
+            | [x;_], Top when x <> amphipod -> failwithf "Can't remove from Top of sideroom when non matching amphipod is present. Room %A, amphipod %A" room x
+            | _ -> failwithf "Invalid state, room is overfull: Room %A" room
+        let sideRoom = sideRoom room state
+        setSideRoom room (updateSideRoom amphipod roomPos sideRoom) state
+
     let addToHallway amphipod hallwayPos state =
         match state.Hallway |> List.tryFind (fun (_,p) -> p = hallwayPos) with
         | Some x -> failwithf "An amphipod: %A already exists at hallway pos %A" x hallwayPos
@@ -265,14 +385,13 @@ module State =
 
     let removeFromState amphipod location state =
         match location with
-        | Hallway hallwayPos -> removeFromHallway amphipod hallwayPos state
-        | SideRoom (room, roomPos) -> removeNextFromRoom amphipod room roomPos state
+        | Hallway hallwayPos -> removeFromHallwayAt amphipod hallwayPos state
+        | SideRoom (room, roomPos) -> removeFromSideRoomAt amphipod room roomPos state
 
     let addToState amphipod location state =
         match location with
         | Hallway hallwayPos -> addToHallway amphipod hallwayPos state
         | SideRoom (room, roomPos) -> addToSideRoomAt amphipod room roomPos state
-
 
 let goalState =
     { Hallway = []
@@ -357,7 +476,7 @@ let isMoveFree state from target =
         amphipodAtLocation state step
         |> Option.isNone)
 
-type Move = { From : Location; To: Location }
+type Move = { Amphipod: string; From : Location; To: Location }
 
 let possibleHallwayToRoomMove state (amphipod, pos : HallwayPosition) =
     // get the sideroom this amphipod needs to be in. That's the only possible
@@ -368,67 +487,14 @@ let possibleHallwayToRoomMove state (amphipod, pos : HallwayPosition) =
     |> Option.filter (fun room -> List.isEmpty room || List.head room = amphipod)
     // items in the hallway can't move through other items in the hallway
     |> Option.map (fun _ ->
-        { From = Hallway pos; To = SideRoom (amphipodSideRoom amphipod, Top) })
+        { Amphipod = amphipod
+          From = Hallway pos
+          To = SideRoom (amphipodSideRoom amphipod, Top) })
     |> Option.filter (fun move ->
-        amphipodSideRoom amphipod
-        |> fun roomType -> isMoveFree state move.From move.To)
-    // If we're still able to do the move, return the next state
-    |> Option.map (fun _ ->
-        state
-        |> State.removeFromHallway pos
-        |> State.addAmphipodToHomeRoom (amphipodSideRoom amphipod))
+        isMoveFree state move.From move.To)
 
 let possibleHallwayToRoomMoves state =
     state.Hallway |> List.choose (possibleHallwayToRoomMove state)
-
-let possibleSideRoomAMove state =
-    match state.SideRoomA with
-    | [] -> [] // empty room, so no moves to make
-    | ["A"]
-    | ["A"; "A"] -> [] // already where it should be
-    | ["A"; _] -> // A on top, something else underneath
-        // need to move the A out to the hallway, so the other item can move out
-        // and we can put the A's back in
-        allHallwayPositions
-        |> List.filter (fun pos -> isMoveFree state (SideRoom (RoomA, Top)) (Hallway pos))
-        |> List.map (fun hallwayPos ->
-            state
-            |> State.removeNextFromRoom RoomA
-            |> State.addToHallway "A" hallwayPos)
-
-    | otherAmphipod :: _ -> // another otherAmphipod, with potentially something underneath
-        let roomPos = if List.length state.SideRoomA = 1 then Bottom else Top
-        let desiredRoom = desiredSideRoom state otherAmphipod
-        let desiredRoomType = amphipodSideRoom otherAmphipod
-        // get valid position in the side room
-        let moveTo =
-            // if the desired room is empty, then we want to move to the bottom of that room
-            if List.isEmpty desiredRoom then Some (SideRoom (desiredRoomType, Bottom))
-            // if the desired room has a single amphipod of the same type then we want to move to the top of that room
-            elif desiredRoom = [otherAmphipod] then Some (SideRoom (desiredRoomType, Top))
-            // we can always move to a hallway
-            else None
-
-        let moveTo = moveTo |> Option.filter (isMoveFree state (SideRoom (RoomA, roomPos)))
-
-        match moveTo with
-        | Some location ->
-            state
-            |> State.removeNextFromRoom RoomA
-            |> State.addToState otherAmphipod location
-            |> List.singleton
-        | None ->
-            // We couldn't move the amphipod directly to the room it belonged
-            // for whatever reason, so check where we can move it to in the hallway.
-            // (Note: The hallway moves are always valid options, but I don't
-            // think it makes any sense to consider them if a direct move would
-            // have worked)
-            allHallwayPositions
-            |> List.filter (fun pos -> isMoveFree state (SideRoom (RoomA, roomPos)) (Hallway pos))
-            |> List.map (fun hallwayPos ->
-                state
-                |> State.removeNextFromRoom RoomA
-                |> State.addToHallway otherAmphipod hallwayPos)
 
 let possibleSideRoomMoves room state =
     let sideRoom = State.sideRoom room state
@@ -441,33 +507,37 @@ let possibleSideRoomMoves room state =
         // need to move the A out to the hallway, so the other item can move out
         // and we can put the A's back in
         allHallwayPositions
-        |> List.filter (fun pos -> isMoveFree state (SideRoom (RoomA, Top)) (Hallway pos))
-        |> List.map (fun hallwayPos ->
-            state
-            |> State.removeNextFromRoom RoomA
-            |> State.addToHallway "A" hallwayPos)
+        |> List.map (fun pos ->
+            { Amphipod = roomAmphipod
+              From = (SideRoom (room, Top))
+              To = (Hallway pos)})
+        |> List.filter (fun move -> isMoveFree state move.From move.To)
 
     | otherAmphipod :: _ -> // another otherAmphipod, with potentially something underneath
         let roomPos = if List.length sideRoom = 1 then Bottom else Top
         let desiredRoom = desiredSideRoom state otherAmphipod
         let desiredRoomType = amphipodSideRoom otherAmphipod
         // get valid position in the side room
-        let moveTo =
+        let move =
             // if the desired room is empty, then we want to move to the bottom of that room
-            if List.isEmpty desiredRoom then Some (SideRoom (desiredRoomType, Bottom))
+            if List.isEmpty desiredRoom
+            then Some { Amphipod = otherAmphipod
+                        From = SideRoom (room, roomPos)
+                        To = SideRoom (desiredRoomType, Bottom) }
             // if the desired room has a single amphipod of the same type then we want to move to the top of that room
-            elif desiredRoom = [otherAmphipod] then Some (SideRoom (desiredRoomType, Top))
+            elif desiredRoom = [otherAmphipod]
+            then Some { Amphipod = otherAmphipod
+                        From = SideRoom (room, roomPos)
+                        To = SideRoom (desiredRoomType, Top) }
             // we can't move into that room, but we can always move to a hallway
             else None
 
-        let moveTo = moveTo |> Option.filter (isMoveFree state (SideRoom (room, roomPos)))
+        let move =
+            move
+            |> Option.filter (fun move -> isMoveFree state move.From move.To)
 
-        match moveTo with
-        | Some location ->
-            state
-            |> State.removeNextFromRoom room
-            |> State.addToState otherAmphipod location
-            |> List.singleton
+        match move with
+        | Some move -> move |> List.singleton
         | None ->
             // We couldn't move the amphipod directly to the room it belonged
             // for whatever reason, so check where we can move it to in the hallway.
@@ -475,25 +545,84 @@ let possibleSideRoomMoves room state =
             // think it makes any sense to consider them if a direct move would
             // have worked)
             allHallwayPositions
-            |> List.filter (fun pos -> isMoveFree state (SideRoom (room, roomPos)) (Hallway pos))
-            |> List.map (fun hallwayPos ->
-                state
-                |> State.removeNextFromRoom room
-                |> State.addToHallway otherAmphipod hallwayPos)
-
-
+            |> List.map (fun pos ->
+                { Amphipod = otherAmphipod
+                  From = SideRoom (room, roomPos)
+                  To = Hallway pos })
+            |> List.filter (fun move ->
+                printfn "Possible Move %A" move
+                isMoveFree state move.From move.To)
 
 let allPossibleSideRoomMoves state =
     [ RoomA; RoomB; RoomC; RoomD ]
     |> List.collect (fun r -> possibleSideRoomMoves r state)
 
 let neighbours state =
-    // The neighbour states are all the possible moves
-    // All items in the hallway could move to a valid side room
-    possibleHallwayToRoomMoves state
-    // The top items in each side room could move out into any of the
-    // hallway positions, or into a valid side room
-    @ allPossibleSideRoomMoves state
+    let possibleMoves =
+        // The neighbour states are all the possible moves
+        // All items in the hallway could move to a valid side room
+        possibleHallwayToRoomMoves state
+        // The top items in each side room could move out into any of the
+        // hallway positions, or into a valid side room
+        @ allPossibleSideRoomMoves state
+
+    possibleMoves
+    |> List.map (fun move ->
+        let nextState =
+            state
+            |> State.removeFromState move.Amphipod move.From
+            |> State.addToState move.Amphipod move.To
+
+        let cost =
+            pathToPosition move.From move.To
+            |> pathCost move.From
+
+        nextState, cost)
+
+let unfilledPosition state roomType =
+    [ SideRoom (roomType, Bottom); SideRoom (roomType, Top) ]
+    |> List.filter (fun loc ->
+        match State.amphipodAt loc state with
+        | None -> true
+        | Some x -> x <> roomAmphipod roomType)
+
+let unfilledPositions state =
+    [ RoomA; RoomB; RoomC; RoomD ]
+    |> List.collect (unfilledPosition state)
+
+let unfilledAmphipods amphipodLocations =
+    amphipodLocations
+    |> List.filter (fun (x, loc) ->
+        match loc with
+        | Hallway _ -> true
+        | SideRoom (room, _) -> room <> amphipodSideRoom x)
+
+
+let rec heuristic (state : State) =
+    // find the positions that don't already have the right amphipod
+    let unfilledPositions = unfilledPositions state
+
+    let unfilledAmphipods =
+        State.allAmphipodLocations state
+        |> unfilledAmphipods
+
+    // go through each amphipod location and try to fill each unfilled position,
+    // counting the steps that it takes for each one
+    let _, steps =
+        ((unfilledPositions, 0.), unfilledAmphipods)
+        ||> List.fold (fun (unfilledPositions, stepsAcc) (amphipod, loc) ->
+            let positionToFill, unfilledPositions =
+                unfilledPositions
+                |> List.extractFirst (fun unfilledLoc ->
+                    match unfilledLoc with
+                    | SideRoom (unfilledRoom, roomPos) ->
+                        unfilledRoom = amphipodSideRoom amphipod
+                    | Hallway _ -> false)
+            //printfn "Heuristic: %A -> %A = %A" loc positionToFill (stepsToPosition loc positionToFill)
+            unfilledPositions,
+            stepsAcc + (float (stepsToPosition loc positionToFill)))
+    steps
+
 
 let parseInput lines =
     // just get the 2 lines with data we need
@@ -511,68 +640,102 @@ let parseInput lines =
       SideRoomC = [sideRoomsLine1.[2]; sideRoomsLine2.[2]]
       SideRoomD = [sideRoomsLine1.[3]; sideRoomsLine2.[3]] }
 
-let input = readLinesWithSlashComments "day23-example1.txt" |> parseInput
-
-//let reconstruct_path cameFrom current =
-//    total_path := {current}
-//    while current in cameFrom.Keys:
-//        current := cameFrom[current]
-//        total_path.prepend(current)
-//    return total_path
 
 // A* finds a path from start to goal.
 // h is the heuristic function. h(n) estimates the cost to reach goal from node n.
+//function A_Star(start, goal, h)
 let astar start goal h =
+    let rec reconstructPath cameFrom current totalPath =
+        match Map.tryFind current cameFrom with
+        | None -> totalPath
+        | Some current -> reconstructPath cameFrom current (current::totalPath)
+
+    // TODO - fscore is complicated! It's a map, it's a set, it's a heap, how do represent that
+    // Use a Map since it's a sorted tree. Seq |> head will get you the minElement
+    let rec processNeighbour openSet cameFrom (gScore : Map<_,double>) fScore current (neighbor, neighborScore) =
+        // d(current,neighbor) is the weight of the edge from current to neighbor
+        // tentative_gScore is the distance from start to the neighbor through current
+        //tentative_gScore := gScore[current] + d(current, neighbor)
+        let tentativeGScore =
+            gScore
+            |> Map.tryFind current
+            |> Option.map (fun x -> x + neighborScore)
+            |> Option.defaultValue Double.PositiveInfinity
+
+        let neighborScore =
+            gScore
+            |> Map.tryFind neighbor
+            |> Option.defaultValue Double.PositiveInfinity
+
+        //if tentative_gScore < gScore[neighbor]
+        if tentativeGScore < neighborScore
+        then
+            // This path to neighbor is better than any previous one. Record it!
+            //cameFrom[neighbor] := current
+            let cameFrom = cameFrom |> Map.add neighbor current
+            //gScore[neighbor] := tentative_gScore
+            let gScore = gScore |> Map.add neighbor tentativeGScore
+            //fScore[neighbor] := tentative_gScore + h(neighbor)
+            let fullPathScore = (tentativeGScore + (h neighbor))
+            let items = Map.tryFind fullPathScore fScore |> Option.defaultValue Set.empty
+            let fScore = fScore |> Map.add fullPathScore (items |> Set.add neighbor)
+            //if neighbor not in openSet
+            //    openSet.add(neighbor)
+            let openSet = Set.add neighbor openSet
+            printfn "Adding neighbour with score: %A" fullPathScore
+            openSet, cameFrom, gScore, fScore
+        else
+            openSet, cameFrom, gScore, fScore
+
+    let rec mainLoop openSet cameFrom gScore (fScore : Map<_,Set<_>>) =
+        // Note: Seq.head will grab the min key value from a map because the
+        // underlying implementation of an F# map is a sorted tree.
+        let current = fScore |> Seq.head |> (fun kvp -> kvp.Value) |> Seq.head
+
+        if current = goal then Some (reconstructPath cameFrom current [])
+        elif Set.isEmpty openSet
+        then None
+        else
+            let openSet = Set.remove current openSet
+            let neighbours = neighbours current
+            printfn "Neighbours count: %A" (List.length neighbours)
+            let openSet, cameFrom, gScore, fScore =
+                ((openSet, cameFrom, gScore, fScore), neighbours)
+                ||> List.fold (fun (openSet, cameFrom, gScore, fScore) neighbour ->
+                    processNeighbour openSet cameFrom gScore fScore current neighbour)
+
+            mainLoop openSet cameFrom gScore fScore
+
     // The set of discovered nodes that may need to be (re-)expanded.
     // Initially, only the start node is known.
     // This is usually implemented as a min-heap or priority queue rather than a hash-set.
-    let openSet = Set.singleton start
+    //openSet := {start}
+    //let openSet = Set.singleton start
+    let openSet = Set.singleton start // we won't add current to the set, because we changed the recursion order
 
     // For node n, cameFrom[n] is the node immediately preceding it on the cheapest path from start
     // to n currently known.
-    let cameFrom = Map
+    //cameFrom := an empty map
+    let cameFrom = Map.empty
 
     // For node n, gScore[n] is the cost of the cheapest path from start to n currently known.
-    // gScore is map with default value of Infinity
-    let gScore = Map [start, Some 0]
+    //gScore := map with default value of Infinity
+    //gScore[start] := 0
+    let gScore = Map [start, 0.]
 
     // For node n, fScore[n] := gScore[n] + h(n). fScore[n] represents our current best guess as to
-    // how short a path from start to finish can be if it goes through n.
+    // how cheap a path could be from start to finish if it goes through n.
     //fScore := map with default value of Infinity
     //fScore[start] := h(start)
-    let fScore = Set ((h start), start)
+    let fScore = Map [(h start), Set [start]]
 
-    //while openSet is not empty
-    let folder openSet fScore =
-        match Set.isEmpty openSet with
-        | true -> failure
-        | false ->
-            // This operation can occur in O(Log(N)) time if openSet is a min-heap or a priority queue
-            //current := the node in openSet having the lowest fScore[] value
-            let current = fScore |> Set.minElement
-            if current = goalState
-                then reconstruct_path(cameFrom, current)
-            else
-                let openSet = openSet |> Map.remove current
+    mainLoop openSet cameFrom gScore fScore
 
-        openSet.Remove(current)
-        let neighbours = neighbours current
-        for neighbor in neighbours do
-            // d(current,neighbor) is the weight of the edge from current to neighbor
-            // tentative_gScore is the distance from start to the neighbor through current
-            tentative_gScore := gScore[current] + d(current, neighbor)
-            if tentative_gScore < gScore[neighbor]
-                // This path to neighbor is better than any previous one. Record it!
-                cameFrom[neighbor] := current
-                gScore[neighbor] := tentative_gScore
-                fScore[neighbor] := tentative_gScore + h(neighbor)
-                if neighbor not in openSet
-                    openSet.add(neighbor)
 
-    // Open set is empty but goal was never reached
-    return failure
-//let part1 (simpleState : SimpleState) =
-//    countOnCubes exclusiveSteps
+let part1 (startState : State) =
+    astar startState goalState heuristic
+    |> Option.get
+    |> List.length
     // Correct Answer:  took:
 
 // Solution space feels large when we consider every possible step.
@@ -590,7 +753,7 @@ let astar start goal h =
 // those that are already in). And we can do that, but for one less amphipod
 // each time.
 
-// I think a good hueristic would to have the least amount of amphipods in the hallway
+// I think a good heuristic would to have the least amount of amphipods in the hallway
 // at any one time.
 //
 // We can start by looking for the easiest side room to fill.
@@ -648,14 +811,16 @@ let astar start goal h =
 //
 // So now I have 2 good options.
 // - My logical deduction option + some djistra search after
-// - A* algorithm with energy cost hueristic
+// - A* algorithm with energy cost heuristic
 // The advantage of the A* algorithm is in the dumbness of the implementation,
 // and being able to use the real board state from the get go. It still feels
 // like it would take too long... but computers are incredibly fast...
 //
 // NOTE: an amphipods can never stop outside of a side room, so there's only ever
 // 7 spots to consider in the hallway: FarLeft, ALeft, AB, BC, CD, DRight, FarRight
+
+
+let input = readLinesWithSlashComments "day23-example1.txt" |> parseInput
+
 Helper.measurePart1 part1 input
-
-
 
