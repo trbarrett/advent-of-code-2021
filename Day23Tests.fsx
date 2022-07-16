@@ -1,8 +1,8 @@
 #load "./Helper.fsx"
-#load "./Day23.fsx"
+#load "./Day23Part1.fsx"
 #r "./bin/Debug/netcoreapp3.1/Expecto.dll"
 open Helper
-open Day23
+open Day23Part1
 open Expecto
 open Expecto.Flip
 

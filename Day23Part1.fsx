@@ -372,9 +372,7 @@ let possibleHallwayToRoomMove state (amphipod, hallwayPos : HallwayPosition) =
     Some (desiredSideRoom state amphipod)
     // items in the hallway can only move into their sideroom if
     // it's empty or it contains their own type of amphipod
-    |> Option.filter (fun room ->
-        List.isEmpty room ||
-        (List.length room = 1 && List.head room = amphipod))
+    |> Option.filter (fun room -> room |> List.forall (fun x -> x = amphipod))
     // items in the hallway can't move through other items in the hallway
     |> Option.map (fun room ->
         let roomPos = if room = [] then Bottom else Top
@@ -648,88 +646,7 @@ let part1 (startState : State) =
         State.print state)
 
     solutionSteps |> List.length, cost
-    // Correct Answer:  took:
-
-// Solution space feels large when we consider every possible step.
-// Perhaps we can simplify it by ignoring the steps for the first part.
-// We can just think about in the hallway or not, and come up with all the possible solutions.
-
-// We have 4 stacks, each with a size of 2
-// And we have a bag of amphipods in the hallway
-
-// From there we follow the other rules:
-// (A) Can't move into a room that's not for them
-// (B) Can't move into a room if it has a amphipod that doesn't match
-
-// Obvious solution is to move everything out, then everything in. (except for
-// those that are already in). And we can do that, but for one less amphipod
-// each time.
-
-// I think a good heuristic would to have the least amount of amphipods in the hallway
-// at any one time.
-//
-// We can start by looking for the easiest side room to fill.
-// (1) The easiest is when a room is empty and so we can fill it immediately.
-//     If it is empty we will fill it immediatley with any amphipod in the
-//     hallway, followed by any available to exit a side room. If one is on the
-//     bottom of a side room we'll move the amphipod in the way out, then
-//     the correct one in.
-// (2) Next is when the bottom amphipod already matches the room its in. Then
-//     we just need to move the top one out, and the correct one in. Tie breaker
-//     in that case would be where the other one we need is in the hallway or
-//     at the top of another side room.
-// (3) The next easiest would be where 1 matches the room it's in at the top.
-//     In that case we'd need to move the top one out, then the bottom one out,
-//     and the top one back in.
-//     Tie breaker then again is where the other to fill is in the hallway or at
-//     the top of another side room.
-// (4) If we don't have any of those cases, then none of the side rooms has
-//     any matching amphipods. I think this can be further subdivided into 2
-//     cases:
-//       (4a) If there's only one amphipod in a side room, moving it out creates
-//            space for others to fill.
-//       (4b) If both amphipods in a side room are the same, we know we'll be
-//            able to put them into a the right room if we clear it. So that seems
-//            like a good next step. Tie breaker if we can put them into a room
-//            that also has two of the same.
-//       (4c) If the two amphipods in a side room are not the same this is the
-//            hardest case. We'll empty them both and then we'll be in case (1)
-//            - an empty room that's easy to fill. So the tiebreaker here would
-//            be how easy it is to fill this room with the correct amphipods.
-//            The more in the hallway or
-//
-// Now I'm not sure if these heuristics are correct. They are just intuitive
-// guesses. I'll try out the code and see if it matches example 1.
-//
-// This doesn't talk into account costs. We could use that for further tie
-// breakers perhaps. Probably best just to let the algo do it's thing and
-// try multiple cases at the same time... With D being so much more expensive
-// we could do quite a bit of flip/floping around with A and B before touching
-// D. I'm not sure if that will mess up our heuristics at all.
-//
-// We could of course not use a heuristic approach. We could just search the
-// state space using djikstra's graph search algorithm. My feeling is that's
-// going to have a crazy large state space with A's and B's just flapping around
-// a whole lot. But maybe not. And the implementation for that shouldn't be too
-// hard.
-// Another option is to use the A* algorithm, with us giving a score to each of
-// our heuristics above. It's hard to give an admissible score to our heuristcs
-// though.
-// But we can give a pretty easy heuristic for a normal node, which is the cost
-// of the node * the amount of steps to the side room it needs to be in. The
-// heuristic needs to be to meet the end goal though, so that's going to be a
-// sum of all the calculated distances for all the amphipods. That could work
-// though.
-//
-// So now I have 2 good options.
-// - My logical deduction option + some djistra search after
-// - A* algorithm with energy cost heuristic
-// The advantage of the A* algorithm is in the dumbness of the implementation,
-// and being able to use the real board state from the get go. It still feels
-// like it would take too long... but computers are incredibly fast...
-//
-// NOTE: an amphipods can never stop outside of a side room, so there's only ever
-// 7 spots to consider in the hallway: FarLeft, ALeft, AB, BC, CD, DRight, FarRight
+    // Correct Answer: 15322 took: 351ms
 
 
 let input = readLinesWithSlashComments "day23.txt" |> parseInput
