@@ -4,16 +4,17 @@ open Helper
 // Day 22: Reactor Reboot
 //
 // The problem is to do with finding the space covered by a set of overlapping
-// 3d boxes (cuboids). The hard part is that each subsequent box can be
-// on (union) or off (subtraction) from the total space we measure.
-// The 3d space is discrite, only using integers, though that doesn't really
+// 3d boxes (cuboids). The hard part is that each subsequent box can add to
+// (union) or subtract from the total space we measure.
+// The 3d space is discrete, only using integers, though that doesn't really
 // make the problem any more easy.
 //
 //
 // Approach:
-//   A naive approach is to turn on and off each point one-by-one for each step,
-//   but that is too inefficient. Instead we just consider operations between
-//   whole cuboids then, at the end, figure out the space covered by the cuboids.
+//   A naive approach is to turn on and off each discrete point one-by-one for
+//   each step, but that is too inefficient. Instead we just consider operations
+//   between whole cuboids then, at the end, figure out the space covered by the
+//   cuboids.
 //
 //   We do a very basic type of csg (Constructive Solid Geometry) operation
 //   where we subtract the space taken up by a 3d cuboid, from another 3d cuboid
@@ -39,9 +40,9 @@ open Helper
 
 // Note:
 // Inclusive sizes of Cuboids
-// The input X=10..10, Y=10..10, Z=10..10 is considers to be a 1x1 cube where
-// each item in the range points to a point in the grid.
-// That means the maths in this solution is sometimes a bit odd if you're used
+// The input X=10..10, Y=10..10, Z=10..10 is considers to be a 1x1x1 cube where
+// each item in the range points to a single 1x1x1 point in the grid.
+// That means the maths in this solution is sometimes a bit odd if you are used
 // to dealing with floating point ranges, because 10..10 would normally have a
 // size of 0, instead of 1 in this case.
 
@@ -137,7 +138,7 @@ module Cuboid =
             // figure out what remains, and how to represent that as a series of
             // cuboids
 
-            // We cut the cuboid apart go axis by axis
+            // We cut the cuboid apart axis by axis
             let newCuboidsX, remaining = cutXRange (bx1, bx2) a xRelation
             let newCuboidsY, remaining = cutYRange (by1, by2) remaining yRelation
             let newCuboidsZ, _ = cutZRange (bz1, bz2) remaining zRelation

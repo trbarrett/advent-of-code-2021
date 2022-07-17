@@ -1,29 +1,29 @@
 #load "./Helper.fsx"
 open Helper
 
-// Day 21 - Dirac Dice
-// Part 2
+// Day 21 - Dirac Dice - Part 2
 //
 // The possible states of the game branch 3 ways each time the dice is rolled.
 // We want to find out in how many of those branches each player wins. This is
-// simplified from the first game in that each die only has 3 sides, and we
-// only play until the first player hits a score of 21.
+// simplified version of the part 1 game in that each die only has 3 sides, and
+// we only play until the first player hits a score of 21.
 //
 // Remarks:
 // The number of possible states is too large to try every option, so we have
 // to take advantage of the problem space to simplify things.
 //
-// The first advantage we can take is to consider the 3 rolls that each player
-// makes as a single roll with a pre-determined number of permutations.
+// The first obvious advantage we can take, is to consider the 3 rolls that each
+// player makes as a single roll with a pre-determined number of permutations.
 //
-// The second advantage is we can treat each player as independent from the other
-// player. It doesn't matter what the other player rolls, or what position they
-// are on, the only time the other player affects the game is when considering
-// if the game is over. That allows us to calculate the full universe of states
-// for a single player for each turn/step of the game. After that we just need
-// to look for winning cases and multiply it by the cases where the other player
-// hasn't won, and is still playing. Once we do that for each player, and each
-// turn/step of the game we'll have our full count of wins for each player.
+// The major improvement though, is we can treat each player as independent from
+// the other player. It doesn't matter what the other player rolls, or what
+// position they are on, the only time the other player affects the game is when
+// considering if the game is over. That allows us to calculate the full
+// universe of states for a single player for each turn/step of the game. After
+// that we just need to look for winning cases and multiply it by the cases
+// where the other player hasn't won, and is still playing. Once we do that for
+// each player, and each turn/step of the game we'll have our full count of wins
+// for each player.
 
 let nextPos pos diceTotal =
     let nextPos = (pos + diceTotal) % 10
@@ -65,9 +65,9 @@ type Universes = int64
 type ScoreUniverse = ((Score * Pos) * Universes)
 
 // The game advances by one set of rolls at a time. Since the players are
-// independent, the same calculation works for both, we don't have to consider
+// independent, the same calculation works for both. We don't have to consider
 // them independently. This will calculate the state after the next set of
-// rolls, with the possible scores, position, and how many universes end up in\
+// rolls, with the possible scores, position, and how many universes end up in
 // that score for a given starting position and number of steps
 let calculateNextGameState (scoresUniverses : ScoreUniverse list) : ScoreUniverse list =
     scoresUniverses
@@ -147,7 +147,7 @@ let playerWins (player1StartPos : int, player2StartPos : int) =
                     |> List.filter (fun ((score, _), _) -> score < 21)
                     |> List.sumBy snd
 
-                // the total universes are not just the number of ways player1
+                // the total universes are not just the number of ways player 1
                 // wins, but the number where it wins times the different states
                 // player 2 could be in when it loses
                 step, winUniverses * player1LostUniverses)

@@ -7,10 +7,12 @@ open System
 // Day 23: Amphipod - Part 2 - Mutable
 //
 // This version has a mutable version of the A* algorithm.
-// It performs a lot faster than the immutable version, but still not enough to
-// say that this is a "fast" algorithm.
-//
-// We might need to add some momization over some other parts of the program
+// It performs a fair amount faster than the immutable version, but still not
+// enough to say that this is a "fast" solution. Additional memoization might
+// help, though I think we'd need to look through a profiler to find out the
+// most expensive parts. I just don't know that the A* algo is the best choice
+// here.
+ 
 
 type HallwayPosition =
     | FarLeft | ALeft | AB | BC | CD | DRight | FarRight

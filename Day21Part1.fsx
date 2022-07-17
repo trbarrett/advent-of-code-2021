@@ -3,7 +3,8 @@ open Helper
 
 // Day 21 - Dirac Dice
 //
-// Part 1 is fairly simple, we are just running through a staged game
+// Part 1 is quite simple. We are just running through a staged game where
+// we roll a standard 6 sided dice a number of times until we have a winner.
 
 type Player = | Player1 | Player2
 

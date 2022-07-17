@@ -4,16 +4,26 @@ open System
 
 // Day 23: Amphipod - Part 2
 //
-// This day is about moving items between rooms in the most efficient way
-// possible
+// This day is about moving items between rooms and a hallway in the most
+// efficient way possible, in a similar manner to the towers of hanoi problem.
 //
 // The approach was to use the A-star algorithm to find the best way through
 // a large state tree. I took the standard algorithm and modified it to be
-// a pure immutable functional style, which I imagine slowed down performance
-// quite a bit. For part 2 it's really quite slow (45 seconds) which isn't great.
-// I'm not too happy with the model I used for the state. It proved to be overly
-// complex to use in practice. A simpler 2d representation of the layout may
-// have proved simpler to use than this logical design.
+// a pure immutable functional style, which slowed down performance quite a bit.
+// There's a Mutable version of this with a mutable A-start algorithm, but it
+// doesn't improve the speed enough.
+//
+// I have a feeling the A* approach isn't best approach. The difference between
+// the cost of A (1), B (10) and the cost of D (1000) means that we'll waste
+// time trying lots of inefficient variations of A and B before doing required
+// moves with D. Perhaps some type of constraint propagation version would be a
+// better approach.
+//
+// I'm not too happy with the model I used for the state. Keeping a logical map
+// of a bunch of landmarks proved to be overly complex to use in practice. A
+// simpler 2d representation of the layout may have proved simpler to use. It
+// probably would have required a lot less work to support the changes for part
+// 2.
 
 type HallwayPosition =
     | FarLeft | ALeft | AB | BC | CD | DRight | FarRight
@@ -42,15 +52,6 @@ let amphipodCost = function
     | "B" -> 10.
     | "C" -> 100.
     | "D" -> 1000.
-
-let memoize fn =
-  let cache = new System.Collections.Generic.Dictionary<_,_>()
-  (fun x ->
-    match cache.TryGetValue x with
-    | true, v -> v
-    | false, _ -> let v = fn (x)
-                  cache.Add(x,v)
-                  v)
 
 let rec pathToPosition' (locationA, locationB) =
     match locationA, locationB with
