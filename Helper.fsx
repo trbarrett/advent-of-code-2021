@@ -113,6 +113,24 @@ module List =
             if i = replaceAt then replacement
             else x)
 
+    let tryExtractFirst pred lst =
+        let rec loop lst frnt =
+            match lst with
+            | x::xs when pred x ->
+                Some x, (List.rev frnt) @ xs
+            | x::xs -> loop xs (x::frnt)
+            | [] -> None, List.rev frnt
+        loop lst []
+
+    let extractFirst pred lst =
+        let rec loop lst frnt =
+            match lst with
+            | x::xs when pred x ->
+                x, (List.rev frnt) @ xs
+            | x::xs -> loop xs (x::frnt)
+            | [] -> failwithf "Found nothing to match the predicate in given list"
+        loop lst []
+
     /// Given a list of tuples, and treating each tuple as key/value pairs,
     /// this function will combine the values where there are duplicate pairs
     /// with the same key

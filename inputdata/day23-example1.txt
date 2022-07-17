@@ -1,0 +1,8 @@
+#############
+#...........#
+###B#C#B#D###
+  #A#D#C#A#
+  #########
+// the amphipods can be organized using a minimum of *12521* energy
+// 10 moves, with order of moves:
+// 3B->h, 2C->3, 2D->h, hB->2, 1B->2, 4D->h, 4A->h, hD->4, hD->4, hA->1
