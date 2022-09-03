@@ -1,0 +1,90 @@
+1        19       37       55       73       91        109      127      145       163      181       199      217       235
+inp w    inp w    inp w    inp w    inp w    inp w     inp w    inp w    inp w     inp w    inp w     inp w    inp w     inp w
+mul x 0  mul x 0  mul x 0  mul x 0  mul x 0  mul x 0   mul x 0  mul x 0  mul x 0   mul x 0  mul x 0   mul x 0  mul x 0   mul x 0          x = 0
+add x z  add x z  add x z  add x z  add x z  add x z   add x z  add x z  add x z   add x z  add x z   add x z  add x z   add x z
+mod x 26 mod x 26 mod x 26 mod x 26 mod x 26 mod x 26  mod x 26 mod x 26 mod x 26  mod x 26 mod x 26  mod x 26 mod x 26  mod x 26         x = [0..25]
+div z 1  div z 1  div z 1  div z 1  div z 1  div z 26  div z 26 div z 1  div z 26  div z 1  div z 26  div z 26 div z 26  div z 26         z = z/26
+add x 10 add x 10 add x 14 add x 11 add x 14 add x -14 add x 0  add x 10 add x -10 add x 13 add x -12 add x -3 add x -11 add x -2         x = [-2..23]
+eql x w  eql x w  eql x w  eql x w  eql x w  eql x w   eql x w  eql x w  eql x w   eql x w  eql x w   eql x w  eql x w   eql x w          w > 2
+eql x 0  eql x 0  eql x 0  eql x 0  eql x 0  eql x 0   eql x 0  eql x 0  eql x 0   eql x 0  eql x 0   eql x 0  eql x 0   eql x 0          is x <> 0?
+mul y 0  mul y 0  mul y 0  mul y 0  mul y 0  mul y 0   mul y 0  mul y 0  mul y 0   mul y 0  mul y 0   mul y 0  mul y 0   mul y 0          y = 0
+add y 25 add y 25 add y 25 add y 25 add y 25 add y 25  add y 25 add y 25 add y 25  add y 25 add y 25  add y 25 add y 25  add y 25         y = 25
+mul y x  mul y x  mul y x  mul y x  mul y x  mul y x   mul y x  mul y x  mul y x   mul y x  mul y x   mul y x  mul y x   mul y x          y = 0 or 25
+add y 1  add y 1  add y 1  add y 1  add y 1  add y 1   add y 1  add y 1  add y 1   add y 1  add y 1   add y 1  add y 1   add y 1          y = 1 or 26
+mul z y  mul z y  mul z y  mul z y  mul z y  mul z y   mul z y  mul z y  mul z y   mul z y  mul z y   mul z y  mul z y   mul z y          z = z or z*26
+mul y 0  mul y 0  mul y 0  mul y 0  mul y 0  mul y 1   mul y 0  mul y 0  mul y 0   mul y 0  mul y 0   mul y 0  mul y 0   mul y 0          y = 0
+add y w  add y w  add y w  add y w  add y w  add y w   add y w  add y w  add y w   add y w  add y w   add y w  add y w   add y w          y = [1..9]
+add y 2  add y 4  add y 8  add y 7  add y 12 add y 8   add y 10 add y 14 add y 2   add y 6  add y 8   add y 11 add y 5   add y 11         y = [12..20]
+mul y x  mul y x  mul y x  mul y x  mul y x  mul y x   mul y x  mul y x  mul y x   mul y x  mul y x   mul y x  mul y x   mul y x          y = x * [12..20]
+add z y  add z y  add z y  add z y  add z y  add z y   add z y  add z y  add z y   add z y  add z y   add z y  add z y   add z y          z = z + (x * [12..20])
+
+// general layout
+inp w
+mul x 0
+add x z
+mod x 26
+div z 1 or div z 26
+add x [constant]
+eql x w
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y
+add y w
+add y [constant]
+mul y x
+add z y
+
+// only 3 lines are different!
+// W never changes
+// Z gets divided by 1 (staying the same) or by 26
+// Then z comes from multiplying by y and adding to y
+
+
+
+
+
+
+
+
+inp w     w = [1..9]
+mul x 0   x = 0
+add x z   x = 0
+mod x 26  x = 0
+div z 1   z = 0
+add x 10  x = 10
+eql x w   x = (x = w ? 1 : 0)
+eql x 0   x = !x
+mul y 0   y = 0
+add y 25  y = 25
+mul y x   y = 0 or 25
+add y 1   y = 1 or 26
+mul z y   z = 0
+mul y 0   y = 0
+add y w   y = [1..9]
+add y 2   y = [3..11]
+mul y x   y = 0 or [3..11]
+add z y   z = 0 or [3..11]
+
+
+inp w     w = [1..9]
+mul x 0   x = 0
+add x z   x = z
+mod x 26  x = z % 26
+div z 1   z = z
+add x 10  x = (z % 26) + 10
+eql x w   x = 0 (z must be greater than 10)
+eql x 0   x = 1
+mul y 0   y = 0
+add y 25  y = 25
+mul y x   y = 25
+add y 1   y = 26
+mul z y   z = z * 26
+mul y 0
+add y w
+add y 4
+mul y x
+add z y

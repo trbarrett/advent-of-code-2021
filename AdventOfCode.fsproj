@@ -2,11 +2,13 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
         <None Include="Helper.fsx" />
+        <None Include="Range.fsx" />
+        <None Include="RangeTests.fsx" />
         <None Include="Day01.fsx" />
         <None Include="Day02.fsx" />
         <None Include="Day03.fsx" />
@@ -38,6 +40,10 @@
         <None Include="Day23Tests.fsx" />
         <None Include="Day23Part2Mutable.fsx" />
         <None Include="Day23Part2.fsx" />
+        <None Include="Day24ReverseFirst.fsx" />
+        <None Include="Day24_2.fsx" />
+        <None Include="Day24_3.fsx" />
+        <None Include="Day24_4.fsx" />
         <None Include="Day24.fsx" />
     </ItemGroup>
 
