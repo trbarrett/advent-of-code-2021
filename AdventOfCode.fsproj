@@ -40,10 +40,8 @@
         <None Include="Day23Tests.fsx" />
         <None Include="Day23Part2Mutable.fsx" />
         <None Include="Day23Part2.fsx" />
-        <None Include="Day24ReverseFirst.fsx" />
-        <None Include="Day24_2.fsx" />
-        <None Include="Day24_3.fsx" />
-        <None Include="Day24_4.fsx" />
+        <None Include="Day24-FailedApproach.fsx" />
+        <None Include="Day24.fsx" />
         <None Include="Day24.fsx" />
     </ItemGroup>
 
