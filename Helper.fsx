@@ -140,6 +140,22 @@ module List =
         |> List.map (fun (key, grp) ->
             key, (grp |> List.map snd |> List.reduce reducer ))
 
+    let partitionBy (fn : 'x -> Choice<'a,'b>)  (lst: 'x list) =
+        (lst, ([],[]))
+        ||> List.foldBack (fun x (accA, accB) ->
+            match fn x with
+            | Choice1Of2 a -> (a::accA, accB)
+            | Choice2Of2 b -> (accA, b::accB))
+
+    let partition3WaysBy (fn : 'x -> Choice<'a,'b,'c>)  (lst: 'x list) =
+        (lst, ([],[],[]))
+        ||> List.foldBack (fun x (accA, accB, accC) ->
+            match fn x with
+            | Choice1Of3 a -> (a::accA, accB, accC)
+            | Choice2Of3 b -> (accA, b::accB, accC)
+            | Choice3Of3 c -> (accA, accB, c::accC))
+
+
 
 module Seq =
     let groupByTuple (xs : ('a * 'b) seq) =
